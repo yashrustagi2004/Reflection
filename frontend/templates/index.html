@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Interview Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(100, 50, 150, 0.4), transparent);
+        }
+
+        .nav-btn {
+            padding: 14px 35px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-btn:last-child {
+            background: white;
+            color: #333;
+            border: 3px solid #333;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #f0f0f0;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
+            color: white;
+        }
+
+        .nav-btn.active:hover {
+            background: linear-gradient(135deg, #8B6BC9 0%, #A185D6 100%);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 80px;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            z-index: -2;
+        }
+
+
+        @keyframes cloudFloat {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -20px); }
+        }
+
+
+        .content-wrapper {
+            max-width: 750px;
+            z-index: 10;
+        }
+
+        .main-card {
+            background: rgba(40, 20, 80, 0.88);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 50px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .main-title {
+            font-size: 56px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 0;
+        }
+
+        .subtitle-card {
+            background: rgba(40, 20, 80, 0.88);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 35px 45px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: white;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .navbar {
+                padding: 15px 30px;
+                gap: 15px;
+            }
+
+            .nav-btn {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+
+            .hero {
+                padding: 0 40px;
+            }
+
+            .main-title {
+                font-size: 48px;
+            }
+
+            .subtitle {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .hero {
+                padding: 0 30px;
+            }
+
+            .main-card {
+                padding: 30px;
+            }
+
+            .main-title {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <button class="nav-btn" onclick="window.location.href='/about'">About Us</button>
+        <button class="nav-btn" onclick="window.location.href='/testimonials'">Testimonials</button>
+        <button class="nav-btn" onclick="window.location.href='/privacy'">Privacy Policy</button>
+        <button class="nav-btn" onclick="window.location.href='/contact'">Contact Us</button>
+        <button class="nav-btn" onclick="window.location.href='/login'">Login</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <!-- Content -->
+        <div class="content-wrapper">
+            <div class="main-card">
+                <h1 class="main-title">AI-Powered Interview Questions for Every Career Path.</h1>
+            </div>
+
+            <div class="subtitle-card">
+                <p class="subtitle">Practice real-world interview scenarios with instant feedback to boost your confidence and performance.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
