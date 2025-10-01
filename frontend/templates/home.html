@@ -529,11 +529,37 @@
             </nav>
 
             <div class="user-profile">
-                <div class="user-avatar">U</div>
+                <div class="user-avatar">
+                    {% if user and user.avatar_url %}
+                        <img src="{{ user.avatar_url }}" alt="Profile Picture" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    {% elif user and user.name %}
+                        {{ user.name[0].upper() }}
+                    {% else %}
+                        U
+                    {% endif %}
+                </div>
                 <div class="user-info">
-                    <h4>Welcome Back!</h4>
+                    <h4>{% if user %}{{ user.name }}{% else %}Welcome Back!{% endif %}</h4>
                     <p>Ready to practice?</p>
                 </div>
+            </div>
+            
+            <!-- Profile and Logout Navigation -->
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 20px; padding-top: 20px;">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('auth.profile') }}" class="nav-link">
+                            <span class="nav-icon">⚙️</span>
+                            Profile Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                            <span class="nav-icon">🚪</span>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
             </div>
         </aside>
 
