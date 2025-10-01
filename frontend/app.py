@@ -29,8 +29,23 @@ def testimonials():
 def privacy():
     return render_template('privacy.html')
 
-@app.route('/contact')
+@app.route('/contact', methods=['GET', 'POST'])
 def contact():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        message = request.form.get('message')
+
+        if not name or not email or not message:
+            flash("All fields are required!", "error")
+            return redirect(url_for('contact'))
+
+        
+        print(f"📩 New message received:\nFrom: {name} ({email})\nMessage: {message}\n")
+
+        flash("Thank you for contacting us! We’ll get back to you soon.", "success")
+        return redirect(url_for('contact'))
+
     return render_template('contact.html')
 
 @app.route('/login')

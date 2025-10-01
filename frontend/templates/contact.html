@@ -1,100 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            /* Add a simple purple gradient background to body */
-            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+    }
 
-        /* Navigation Bar - Same as landing page */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 60px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 20px;
-            z-index: 1000;
-            background: linear-gradient(to bottom, rgba(100, 50, 150, 0.4), transparent);
-        }
+    /* Navigation Bar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px 60px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      background: linear-gradient(to bottom, rgba(100, 50, 150, 0.4), transparent);
+    }
 
-        .nav-btn {
-            padding: 14px 35px;
-            background: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            text-decoration: none;
-            display: inline-block;
-        }
+    .nav-btn {
+      padding: 14px 35px;
+      background: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-block;
+    }
 
-        .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 
-        .nav-btn:last-child {
-            background: white;
-            color: #333;
-            border: 3px solid #333;
-        }
+    .nav-btn:last-child {
+      background: white;
+      color: #333;
+      border: 3px solid #333;
+    }
 
-        /* Page content area */
-        .page-content {
-            padding-top: 100px;
-            min-height: 100vh;
-        }
+    .active-page {
+      background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%) !important;
+      color: white !important;
+      border: none !important;
+    }
 
-        /* Your page-specific styles here */
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 40px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
+    /* Page content */
+    .page-content {
+      padding-top: 120px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        h1 {
-            color: #6B46C1;
-            margin-bottom: 20px;
-        }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 12px 45px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
 
-        .active-page {
-            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%) !important;
-            color: white !important;
-            border: none !important;
-        }
-    </style>
+    h1 {
+      color: #6B46C1;
+      margin-bottom: 15px;
+      font-size: 2rem;
+    }
+
+    p {
+      margin-bottom: 25px;
+      color: #555;
+      font-size: 1rem;
+    }
+
+    form {
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #7C3AED;
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+      outline: none;
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #6B46C1, #7C3AED, #8B5CF6);
+      color: white;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #4C9FE8, #5BC0DE);
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+
+    /* Flash messages */
+    .flash-message {
+      margin-bottom: 20px;
+      padding: 12px 15px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .flash-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+    }
+
+    .flash-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <a href="/about" class="nav-btn">About Us</a>
-        <a href="/testimonials" class="nav-btn">Testimonials</a>
-        <a href="/privacy" class="nav-btn">Privacy Policy</a>
-        <a href="/contact" class="nav-btn active-page">Contact Us</a>
-        <a href="/login" class="nav-btn">Login</a>
-    </nav>
+  
+  <nav class="navbar">
+    <a href="/about" class="nav-btn">About Us</a>
+    <a href="/testimonials" class="nav-btn">Testimonials</a>
+    <a href="/privacy" class="nav-btn">Privacy Policy</a>
+    <a href="/contact" class="nav-btn active-page">Contact Us</a>
+    <a href="/login" class="nav-btn">Login</a>
+  </nav>
+
+ 
+  <div class="page-content">
+    <div class="container">
+      <h1>Get in Touch</h1>
+      <p>We’d love to hear from you! Have a question, feedback, or idea? Fill out the form below and our team will get back to you shortly.</p>
+
+      
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-message {{ 'flash-success' if category=='success' else 'flash-error' }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      
+      <form action="/contact" method="POST">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+
+        <label for="email">Your Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+
+        <label for="message">Your Message</label>
+        <textarea id="message" name="message" rows="5" placeholder="Write your message here..." required></textarea>
+
+        <button type="submit" class="btn-submit">Send Message</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
