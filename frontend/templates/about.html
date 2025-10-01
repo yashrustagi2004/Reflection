@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us</title>
+    <title>About Us - Reflection</title>
     <style>
         * {
             margin: 0;
@@ -14,11 +14,12 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
-            /* Add a simple purple gradient background to body */
             background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            color: #333;
+            line-height: 1.6;
         }
 
-        /* Navigation Bar - Same as landing page */
+        /* Navigation Bar */
         .navbar {
             position: fixed;
             top: 0;
@@ -59,31 +60,66 @@
             border: 3px solid #333;
         }
 
-        /* Page content area */
-        .page-content {
-            padding-top: 100px;
-            min-height: 100vh;
-        }
-
-        /* Your page-specific styles here */
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 40px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            color: #6B46C1;
-            margin-bottom: 20px;
-        }
-
         .active-page {
             background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%) !important;
             color: white !important;
             border: none !important;
+        }
+
+        /* Page content area */
+        .page-content {
+            padding-top: 140px;
+            padding-bottom: 60px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 50px 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #6B46C1;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 2.8rem;
+        }
+
+        h2 {
+            color: #7C3AED;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        ul {
+            margin-left: 25px;
+            margin-bottom: 25px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        /* Optional: add some hover effect on li for engagement */
+        li:hover {
+            color: #4C9FE8;
+            transition: 0.3s;
         }
     </style>
 </head>
@@ -96,5 +132,27 @@
         <a href="/contact" class="nav-btn">Contact Us</a>
         <a href="/login" class="nav-btn">Login</a>
     </nav>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <div class="container">
+            <h1>About Reflection</h1>
+            <p>Welcome to <strong>Reflection</strong> – your personal AI-powered companion for interview preparation. We understand that preparing for an interview can be stressful, time-consuming, and sometimes overwhelming. That's why we've created a platform that takes the guesswork out of preparation and helps you focus on what really matters: showcasing your skills and landing your dream job.</p>
+
+            <p>With Reflection, all you need to do is upload your <strong>resume</strong> and the <strong>job description</strong> for the role you’re targeting. Our intelligent system analyzes your profile and the requirements of the position to generate a set of <strong>customized interview questions</strong> just for you. No generic questions – only ones that truly help you grow.</p>
+
+            <h2>Why You'll Love It</h2>
+            <ul>
+                <li><strong>Smart & Personalized:</strong> Questions are tailored specifically to your resume and job description.</li>
+                <li><strong>Analysis of Strengths & Weaknesses:</strong> Receive insightful feedback on your strengths and areas for improvement, helping you focus your preparation where it matters most.</li>
+                <li><strong>Simple & Intuitive:</strong> A clean and engaging interface makes preparation stress-free and enjoyable.</li>
+            </ul>
+
+            <h2>Our Mission</h2>
+            <p>At Reflection, we believe everyone deserves the chance to shine in their interviews. Our mission is to provide an intelligent, personalized, and user-friendly platform that empowers candidates to approach interviews with confidence and clarity. With Reflection, you’re not just practicing—you’re preparing strategically for success.</p>
+
+            <p>Whether you’re a fresh graduate stepping into the professional world, or an experienced professional aiming for your next big role, Reflection adapts to your needs and helps you perform at your best.</p>
+        </div>
+    </div>
 </body>
 </html>
