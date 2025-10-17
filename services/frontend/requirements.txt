@@ -1,0 +1,4 @@
+# Frontend Service Dependencies
+-r ../shared/requirements.txt
+
+# No additional dependencies needed

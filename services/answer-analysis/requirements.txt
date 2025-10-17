@@ -1,0 +1,6 @@
+# Answer Analysis Service Dependencies
+-r ../shared/requirements.txt
+
+# AI/ML Libraries
+langchain==0.1.0
+langchain-google-genai==0.0.6

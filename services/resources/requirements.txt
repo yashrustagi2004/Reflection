@@ -1,0 +1,10 @@
+# Resources Service Dependencies
+-r ../shared/requirements.txt
+
+# Vector Database
+pinecone-client==3.0.0
+
+# Embeddings
+sentence-transformers==2.2.2
+langchain==0.1.0
+langchain-pinecone==0.0.3

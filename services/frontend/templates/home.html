@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Interview Platform</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: rgba(40, 20, 80, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 30px 0;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            border-right: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 0 30px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 15px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        /* Feature Cards Grid - FIXED for equal height */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Card Header Section */
+        .card-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .feature-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #6B46C1, transparent);
+            margin: 20px 0;
+        }
+
+        /* Card Content Section - grows to fill space */
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            text-align: center;
+        }
+
+        /* Upload Button */
+        .upload-btn {
+            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: auto;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 70, 193, 0.4);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upload-btn.success {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .upload-btn.secondary {
+            background: linear-gradient(135deg, #4C9FE8 0%, #5BC0DE 100%);
+        }
+
+        .upload-btn.cancel {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .upload-btn.submit {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .upload-btn.submit:disabled {
+            background: #9ca3af;
+        }
+
+        /* File Info Display */
+        .file-info {
+            display: none;
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 15px 0;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-info.show {
+            display: flex;
+        }
+
+        .file-info-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .file-info-text {
+            flex: 1;
+            font-size: 14px;
+            color: #0c4a6e;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .file-info-remove:hover {
+            background: #dc2626;
+        }
+
+        /* File Requirements */
+        .file-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 15px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Text Area for Job Description */
+        .jd-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin: 15px 0;
+            transition: border-color 0.3s ease;
+        }
+
+        .jd-textarea:focus {
+            outline: none;
+            border-color: #6B46C1;
+            box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.1);
+        }
+
+        .jd-textarea::placeholder {
+            color: #999;
+        }
+
+        .textarea-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .textarea-container.active {
+            display: block;
+        }
+
+        .char-counter {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Success/Error Messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* User Profile Section */
+        .user-profile {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info h4 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                max-width: 600px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .feature-card {
+                padding: 35px 25px;
+                min-height: 400px;
+            }
+
+            .page-title {
+                font-size: 26px;
+                margin-top: 50px;
+            }
+
+            .page-subtitle {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .feature-card {
+                padding: 30px 20px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .upload-btn {
+                font-size: 14px;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Dashboard</h2>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active">
+                            <span class="nav-icon">🏠</span>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon">✏️</span>
+                            Practice
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon">📚</span>
+                            Resources
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <h4>{% if user %}{{ user.name }}{% else %}Welcome Back!{% endif %}</h4>
+                    <p>Ready to practice?</p>
+                </div>
+            </div>
+            
+            <!-- Profile and Logout Navigation -->
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: 20px; padding-top: 20px;">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('profile') }}" class="nav-link">
+                            <span class="nav-icon">⚙️</span>
+                            Profile Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="nav-link">
+                            <span class="nav-icon">🚪</span>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Welcome to Your Interview Dashboard</h1>
+                <p class="page-subtitle">Upload your resume and job description to get started with personalized interview practice</p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Upload Resume Card -->
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="feature-icon">📄</div>
+                        <h3 class="feature-title">Upload Resume</h3>
+                        <p class="feature-description">Upload your resume to get personalized interview questions based on your experience and skills.</p>
+                    </div>
+                    
+                    <div class="feature-divider"></div>
+                    
+                    <div class="card-content">
+                        <div class="upload-section">
+                            <form id="resume-form" enctype="multipart/form-data">
+                                <input type="file" id="resume-file" name="resume_file" accept=".pdf,.doc,.docx" style="display: none;">
+                                <button type="button" class="upload-btn" id="resume-upload-btn">
+                                    <span>📤</span>
+                                    Choose File
+                                </button>
+                            </form>
+                            
+                            <div class="file-info" id="resume-file-info">
+                                <span class="file-info-icon">✅</span>
+                                <span class="file-info-text" id="resume-filename"></span>
+                                <button class="file-info-remove" onclick="removeFile('resume')">Remove</button>
+                            </div>
+                            
+                            <button type="button" class="upload-btn submit" id="resume-submit-btn" style="display: none;">
+                                <span>🚀</span>
+                                Submit Resume
+                            </button>
+                            
+                            <div class="file-requirements">
+                                Allowed: PDF, DOC, DOCX<br>
+                                Max size: 10MB
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="message" id="resume-message"></div>
+                </div>
+
+                <!-- Upload Job Description Card -->
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="feature-icon">💼</div>
+                        <h3 class="feature-title">Job Description</h3>
+                        <p class="feature-description">Add a job description to receive role-specific interview questions and scenarios.</p>
+                    </div>
+                    
+                    <div class="feature-divider"></div>
+                    
+                    <div class="card-content">
+                        <div class="upload-section" id="jd-upload-section">
+                            <form id="jd-form" enctype="multipart/form-data">
+                                <input type="file" id="jd-file" name="jd_file" accept=".pdf,.doc,.docx" style="display: none;">
+                                <button type="button" class="upload-btn" id="jd-upload-btn">
+                                    <span>📤</span>
+                                    Choose File
+                                </button>
+                            </form>
+                            
+                            <div style="margin: 15px 0; color: #666; font-weight: 500;">OR</div>
+                            
+                            <button class="upload-btn secondary" id="write-jd-btn">
+                                <span>✏️</span>
+                                Write Description
+                            </button>
+                            
+                            <div class="file-info" id="jd-file-info">
+                                <span class="file-info-icon">✅</span>
+                                <span class="file-info-text" id="jd-filename"></span>
+                                <button class="file-info-remove" onclick="removeFile('jd')">Remove</button>
+                            </div>
+                            
+                            <button type="button" class="upload-btn submit" id="jd-submit-btn" style="display: none;">
+                                <span>🚀</span>
+                                Submit Job Description
+                            </button>
+                            
+                            <div class="textarea-container" id="jd-textarea-container">
+                                <textarea 
+                                    class="jd-textarea" 
+                                    id="jd-textarea" 
+                                    placeholder="Paste or write the job description here. Include role responsibilities, requirements, qualifications, and any specific skills needed. (Minimum 50 characters)"
+                                    maxlength="5000"
+                                ></textarea>
+                                <div class="char-counter">
+                                    <span id="char-count">0</span>/5000 characters
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" class="upload-btn" id="submit-jd-btn">
+                                        <span>✅</span>
+                                        Submit
+                                    </button>
+                                    <button type="button" class="upload-btn cancel" id="cancel-jd-btn">
+                                        <span>❌</span>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="file-requirements">
+                                File uploads: PDF, DOC, DOCX<br>
+                                Max size: 10MB
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="message" id="jd-message"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Secure configuration
+        const CONFIG = {
+            MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+            ALLOWED_EXTENSIONS: ['.pdf', '.doc', '.docx'],
+            MIN_JD_LENGTH: 50,
+            MAX_JD_LENGTH: 5000
+        };
+
+        // Store uploaded files state
+        const uploadedFiles = {
+            resume: null,
+            jd: null
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target) && 
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Sanitize filename for display
+        function sanitizeFilename(filename) {
+            return filename.replace(/[<>"'&]/g, '');
+        }
+
+        // Validate file before upload
+        function validateFile(file) {
+            if (!file) {
+                return { valid: false, message: 'No file selected' };
+            }
+
+            const extension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!CONFIG.ALLOWED_EXTENSIONS.includes(extension)) {
+                return { valid: false, message: 'Invalid file type. Please upload PDF, DOC, or DOCX files' };
+            }
+
+            if (file.size > CONFIG.MAX_FILE_SIZE) {
+                return { valid: false, message: 'File is too large. Maximum size is 10MB' };
+            }
+
+            if (file.size === 0) {
+                return { valid: false, message: 'File is empty' };
+            }
+
+            return { valid: true };
+        }
+
+        // File upload handlers
+        document.getElementById('resume-upload-btn').addEventListener('click', function() {
+            document.getElementById('resume-file').click();
+        });
+
+        document.getElementById('jd-upload-btn').addEventListener('click', function() {
+            document.getElementById('jd-file').click();
+        });
+
+        // Resume file upload
+        document.getElementById('resume-file').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const validation = validateFile(file);
+                
+                if (!validation.valid) {
+                    showMessage('resume-message', validation.message, 'error');
+                    e.target.value = '';
+                    return;
+                }
+                
+                uploadFile(file, '/api/upload/resume', 'resume_file', 'resume');
+            }
+        });
+
+        // Resume submit button
+        document.getElementById('resume-submit-btn').addEventListener('click', function() {
+            submitUploadedFile('resume', '/process_resume');
+        });
+
+        // Job description file upload
+        document.getElementById('jd-file').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const validation = validateFile(file);
+                
+                if (!validation.valid) {
+                    showMessage('jd-message', validation.message, 'error');
+                    e.target.value = '';
+                    return;
+                }
+                
+                uploadFile(file, '/api/upload/job-description', 'jd_file', 'jd');
+            }
+        });
+
+        // Job description submit button (for file uploads)
+        document.getElementById('jd-submit-btn').addEventListener('click', function() {
+            submitUploadedFile('jd', '/process_job_description');
+        });
+
+        // Write job description functionality
+        document.getElementById('write-jd-btn').addEventListener('click', function() {
+            const container = document.getElementById('jd-textarea-container');
+            container.classList.add('active');
+            document.getElementById('jd-textarea').focus();
+        });
+
+        document.getElementById('cancel-jd-btn').addEventListener('click', function() {
+            const container = document.getElementById('jd-textarea-container');
+            container.classList.remove('active');
+            document.getElementById('jd-textarea').value = '';
+            updateCharCount();
+        });
+
+        // Character counter for textarea
+        const textarea = document.getElementById('jd-textarea');
+        const charCount = document.getElementById('char-count');
+
+        function updateCharCount() {
+            const count = textarea.value.length;
+            charCount.textContent = count;
+            
+            if (count > 4500) {
+                charCount.style.color = '#e74c3c';
+            } else if (count > 4000) {
+                charCount.style.color = '#f39c12';
+            } else {
+                charCount.style.color = '#666';
+            }
+        }
+
+        textarea.addEventListener('input', updateCharCount);
+
+        // Submit job description text
+        document.getElementById('submit-jd-btn').addEventListener('click', function() {
+            const jobDescription = textarea.value.trim();
+            
+            if (jobDescription.length < CONFIG.MIN_JD_LENGTH) {
+                showMessage('jd-message', `Job description must be at least ${CONFIG.MIN_JD_LENGTH} characters long`, 'error');
+                return;
+            }
+
+            if (jobDescription.length > CONFIG.MAX_JD_LENGTH) {
+                showMessage('jd-message', `Job description cannot exceed ${CONFIG.MAX_JD_LENGTH} characters`, 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('job_description', jobDescription);
+
+            const button = document.getElementById('submit-jd-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>⏳</span> Submitting...';
+            button.disabled = true;
+
+            fetch('/submit_job_description', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage('jd-message', data.message || 'Job description submitted successfully', 'success');
+                    document.getElementById('jd-textarea-container').classList.remove('active');
+                    textarea.value = '';
+                    updateCharCount();
+                    uploadedFiles.jd = 'Text Description';
+                    showFileInfo('jd', 'Job Description (Text)');
+                } else {
+                    showMessage('jd-message', data.message || 'Submission failed', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('jd-message', 'Error submitting job description. Please try again.', 'error');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });
+
+        // Generic file upload function
+        function uploadFile(file, endpoint, fieldName, fileType) {
+            const formData = new FormData();
+            formData.append(fieldName, file);
+
+            const messageId = fileType + '-message';
+            const button = document.getElementById(fileType + '-upload-btn');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<span>⏳</span> Uploading...';
+            button.disabled = true;
+
+            fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage(messageId, data.message || 'File uploaded successfully', 'success');
+                    uploadedFiles[fileType] = sanitizeFilename(data.original_filename || file.name);
+                    showFileInfo(fileType, uploadedFiles[fileType]);
+                } else {
+                    showMessage(messageId, data.message || 'Upload failed', 'error');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                showMessage(messageId, 'Upload failed. Please try again.', 'error');
+                button.innerHTML = originalText;
+                button.disabled = false;
+                console.error('Error:', error);
+            });
+        }
+
+        // Show file info after successful upload
+        function showFileInfo(fileType, filename) {
+            const fileInfo = document.getElementById(fileType + '-file-info');
+            const filenameEl = document.getElementById(fileType + '-filename');
+            const uploadBtn = document.getElementById(fileType + '-upload-btn');
+            const submitBtn = document.getElementById(fileType + '-submit-btn');
+            
+            filenameEl.textContent = filename;
+            fileInfo.classList.add('show');
+            uploadBtn.style.display = 'none';
+            
+            if (submitBtn) {
+                submitBtn.style.display = 'inline-flex';
+            }
+            
+            if (fileType === 'jd') {
+                document.getElementById('write-jd-btn').style.display = 'none';
+            }
+        }
+
+        // Submit uploaded file for processing
+        function submitUploadedFile(fileType, endpoint) {
+            if (!uploadedFiles[fileType]) {
+                showMessage(fileType + '-message', 'No file to submit', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById(fileType + '-submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span>⏳</span> Processing...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+
+            fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showMessage(fileType + '-message', data.message || 'Submitted successfully! Redirecting...', 'success');
+                    
+                    // Redirect to next page if provided
+                    if (data.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    }
+                } else {
+                    showMessage(fileType + '-message', data.message || 'Submission failed', 'error');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                showMessage(fileType + '-message', 'Submission failed. Please try again.', 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                console.error('Error:', error);
+            });
+        }
+
+        // Remove file
+        function removeFile(fileType) {
+            uploadedFiles[fileType] = null;
+            
+            const fileInfo = document.getElementById(fileType + '-file-info');
+            const uploadBtn = document.getElementById(fileType + '-upload-btn');
+            const submitBtn = document.getElementById(fileType + '-submit-btn');
+            const fileInput = document.getElementById(fileType + '-file');
+            
+            fileInfo.classList.remove('show');
+            uploadBtn.style.display = 'inline-flex';
+            uploadBtn.innerHTML = '<span>📤</span> Choose File';
+            uploadBtn.disabled = false;
+            
+            if (submitBtn) {
+                submitBtn.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = submitBtn.innerHTML.replace('Processing...', submitBtn.getAttribute('data-original-text') || 'Submit');
+            }
+            
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            if (fileType === 'jd') {
+                document.getElementById('write-jd-btn').style.display = 'inline-flex';
+            }
+        }
+
+        // Show message function
+        function showMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = `message ${type} show`;
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

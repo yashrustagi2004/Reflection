@@ -1,0 +1,13 @@
+# Question-Answer Generation Service Dependencies
+-r ../shared/requirements.txt
+
+# AI/ML Libraries
+langchain==0.1.0
+langchain-google-genai==0.0.6
+langchain-pinecone==0.0.3
+
+# Vector Database
+pinecone-client==3.0.0
+
+# Embeddings
+sentence-transformers==2.2.2

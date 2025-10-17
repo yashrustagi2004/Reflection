@@ -1,0 +1,8 @@
+# Login Management Service Dependencies
+-r ../shared/requirements.txt
+
+# Database
+pymongo==4.6.0
+
+# Security
+bcrypt>=4.0.1
