@@ -305,6 +305,127 @@
             line-height: 1.5;
         }
 
+        /* Combined Submit Styles */
+        .combined-submit-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .combined-submit-card .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 24px;
+        }
+
+        .combined-submit-card .feature-title {
+            color: white;
+            font-size: 24px;
+        }
+
+        .combined-submit-card .feature-description {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .combined-submit-info {
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .submit-file-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .submit-file-info:last-child {
+            margin-bottom: 0;
+        }
+
+        .file-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .file-details strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .file-details small {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        .upload-btn.primary {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            font-size: 18px;
+            padding: 15px 30px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(86, 171, 47, 0.3);
+            transform: scale(1.05);
+        }
+
+        .upload-btn.primary:hover {
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px rgba(86, 171, 47, 0.4);
+        }
+
+        .combined-submit-notes {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .combined-submit-notes p {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .combined-submit-notes ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .combined-submit-notes li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .combined-submit-notes li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #a8e6cf;
+            font-weight: bold;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Text Area for Job Description */
         .jd-textarea {
             width: 100%;
@@ -373,6 +494,12 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
 
         .message.show {
@@ -672,6 +799,15 @@
                     
                     <div class="message" id="jd-message"></div>
                 </div>
+
+                <!-- Simple Combined Submit Button -->
+                <div class="simple-combined-submit" id="combined-submit-section" style="display: none; text-align: center; margin-top: 30px;">
+                    <button type="button" class="upload-btn submit primary" id="combined-submit-btn" style="padding: 15px 30px; font-size: 16px;">
+                        <span>🎯</span>
+                        Submit & Generate Questions
+                    </button>
+                    <div class="message" id="combined-message"></div>
+                </div>
             </div>
         </main>
     </div>
@@ -736,6 +872,314 @@
             return { valid: true };
         }
 
+        // Track JD input type (file or text)
+        const jdInputState = {
+            type: null, // 'file' or 'text'
+            hasContent: false
+        };
+
+        // Track processing state
+        const processingState = {
+            resumeProcessing: false,
+            jdProcessing: false,
+            resumeProcessed: false,
+            jdProcessed: false
+        };
+
+        // Update JD input state and UI
+        function updateJDInputState(type, hasContent) {
+            jdInputState.type = type;
+            jdInputState.hasContent = hasContent;
+            
+            const fileUploadSection = document.querySelector('#jd-upload-section .upload-btn');
+            const writeJdBtn = document.getElementById('write-jd-btn');
+            const textareaContainer = document.getElementById('jd-textarea-container');
+            
+            if (type === 'text') {
+                // Text input mode - hide file upload options
+                fileUploadSection.style.display = 'none';
+                if (hasContent) {
+                    // Text has content - also hide write button
+                    writeJdBtn.style.display = 'none';
+                }
+                // Keep textarea container active when in text mode
+            } else if (type === 'file' && hasContent) {
+                // File uploaded - hide text input option
+                writeJdBtn.style.display = 'none';
+                textareaContainer.classList.remove('active');
+            } else if (type === null || type === undefined) {
+                // No content - show both options
+                fileUploadSection.style.display = 'inline-flex';
+                writeJdBtn.style.display = 'inline-flex';
+                textareaContainer.classList.remove('active');
+            }
+        }
+
+        // Check if both files are ready for combined submit
+        function checkCombinedSubmitReadiness() {
+            const resumeReady = uploadedFiles.resume !== null;
+            const jdReady = uploadedFiles.jd !== null;
+            
+            const combinedSection = document.getElementById('combined-submit-section');
+            const resumeSubmitBtn = document.getElementById('resume-submit-btn');
+            const jdSubmitBtn = document.getElementById('jd-submit-btn');
+            
+            // Use Case 3: Both files uploaded
+            if (resumeReady && jdReady) {
+                // Show simple combined submit button
+                combinedSection.style.display = 'block';
+                
+                // Hide individual submit buttons
+                resumeSubmitBtn.style.display = 'none';
+                jdSubmitBtn.style.display = 'none';
+                
+                // Scroll to combined section
+                setTimeout(() => {
+                    combinedSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            } 
+            // Use Case 1: Only resume uploaded
+            else if (resumeReady && !jdReady) {
+                // Hide combined section
+                combinedSection.style.display = 'none';
+                
+                // Show resume submit button
+                resumeSubmitBtn.style.display = 'inline-block';
+                jdSubmitBtn.style.display = 'none';
+            } 
+            // Use Case 2: Only JD uploaded/entered (NOT ALLOWED)
+            else if (!resumeReady && jdReady) {
+                // Hide combined section
+                combinedSection.style.display = 'none';
+                
+                // Hide both submit buttons
+                resumeSubmitBtn.style.display = 'none';
+                jdSubmitBtn.style.display = 'none';
+                
+                // Show error message for both file and text JD
+                const errorMsg = 'Resume is mandatory. Please upload your resume first before submitting the job description.';
+                if (jdInputState.type === 'text') {
+                    showMessage('jd-message', errorMsg, 'error');
+                } else {
+                    showMessage('jd-message', errorMsg, 'error');
+                }
+            } 
+            // No files uploaded
+            else {
+                // Hide combined section
+                combinedSection.style.display = 'none';
+                
+                // Hide individual submit buttons
+                resumeSubmitBtn.style.display = 'none';
+                jdSubmitBtn.style.display = 'none';
+            }
+        }
+
+        // Handle individual file processing state
+        function updateProcessingState() {
+            const resumeUploadSection = document.getElementById('jd-upload-section');
+            const jdUploadBtn = document.getElementById('jd-upload-btn');
+            const writeJdBtn = document.getElementById('write-jd-btn');
+            
+            // Use Case 1: Resume processing - disable JD uploads
+            if (processingState.resumeProcessing) {
+                jdUploadBtn.disabled = true;
+                writeJdBtn.disabled = true;
+                jdUploadBtn.style.opacity = '0.5';
+                writeJdBtn.style.opacity = '0.5';
+                
+                showMessage('resume-message', 'Processing resume... Job description upload will be available after completion.', 'info');
+            } 
+            // Resume processing complete - re-enable JD uploads
+            else if (processingState.resumeProcessed && !processingState.resumeProcessing) {
+                jdUploadBtn.disabled = false;
+                writeJdBtn.disabled = false;
+                jdUploadBtn.style.opacity = '1';
+                writeJdBtn.style.opacity = '1';
+            }
+        }
+
+        // Individual file submit functions - through frontend proxy
+        function submitIndividualFile(type) {
+            if (!uploadedFiles[type]) {
+                showMessage(`${type}-message`, `No ${type} file uploaded`, 'error');
+                return;
+            }
+
+            const button = document.getElementById(`${type}-submit-btn`);
+            const originalText = button.innerHTML;
+            
+            // Use Case 1: Resume processing - update state and disable JD uploads
+            if (type === 'resume') {
+                processingState.resumeProcessing = true;
+                updateProcessingState();
+                button.innerHTML = '<span>⏳</span> Processing Resume...';
+            } else {
+                button.innerHTML = '<span>⏳</span> Processing...';
+            }
+            
+            button.disabled = true;
+
+            // Create FormData with the uploaded file
+            const formData = new FormData();
+            formData.append(type, uploadedFiles[type]);
+
+            // Send through frontend proxy
+            const endpoint = type === 'resume' ? '/process_resume' : '/process_job_description';
+
+            fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (type === 'resume') {
+                        processingState.resumeProcessing = false;
+                        processingState.resumeProcessed = true;
+                        updateProcessingState();
+                        
+                        showMessage(`${type}-message`, 'Resume processed successfully! Personal information has been removed. You can now upload a job description.', 'success');
+                        
+                        // Hide resume submit button after successful processing
+                        button.style.display = 'none';
+                        
+                        // Re-enable upload options after successful processing
+                        setTimeout(() => {
+                            // Reset all states to allow new uploads
+                            uploadedFiles.resume = null;
+                            uploadedFiles.jd = null;
+                            document.getElementById('resume-file').value = '';
+                            document.getElementById('resume-file-info').style.display = 'none';
+                            processingState.resumeProcessed = false;
+                            updateProcessingState();
+                            
+                            showMessage('resume-message', 'Upload completed successfully! Refreshing dashboard...', 'success');
+                            
+                            // Refresh the page after showing success message
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }, 2000);
+                    } else {
+                        showMessage(`${type}-message`, data.message || 'File processed successfully!', 'success');
+                    }
+                } else {
+                    if (type === 'resume') {
+                        processingState.resumeProcessing = false;
+                        updateProcessingState();
+                    }
+                    showMessage(`${type}-message`, data.error || 'Processing failed', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Processing error:', error);
+                if (type === 'resume') {
+                    processingState.resumeProcessing = false;
+                    updateProcessingState();
+                }
+                showMessage(`${type}-message`, 'Network error occurred', 'error');
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        // Combined submit functionality
+        function submitBothFiles() {
+            if (!uploadedFiles.resume || !uploadedFiles.jd) {
+                showMessage('combined-message', 'Both resume and job description are required', 'error');
+                return;
+            }
+
+            const button = document.getElementById('combined-submit-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>⏳</span> Processing Files...';
+            button.disabled = true;
+
+            // Check if JD is text-based or file-based
+            const isTextJD = jdInputState.type === 'text' || 
+                             (uploadedFiles.jd.name && uploadedFiles.jd.name.includes('(Text)'));
+
+            let fetchPromise;
+
+            if (isTextJD) {
+                // Mixed submission: file resume + text JD
+                const formData = new FormData();
+                formData.append('resume', uploadedFiles.resume);
+                
+                // Get the actual text content
+                let textContent = '';
+                if (uploadedFiles.jd.textContent) {
+                    textContent = uploadedFiles.jd.textContent;
+                } else {
+                    textContent = document.getElementById('jd-textarea').value.trim();
+                }
+                
+                formData.append('job_description_text', textContent);
+
+                fetchPromise = fetch('/api/upload/submit_mixed', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+            } else {
+                // File-based submission: file resume + file JD
+                const formData = new FormData();
+                formData.append('resume', uploadedFiles.resume);
+                formData.append('job_description', uploadedFiles.jd);
+
+                fetchPromise = fetch('/api/upload/submit', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+            }
+
+            fetchPromise
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('combined-message', 
+                        'Files uploaded successfully! Resume processed with personal information removed. Job description saved as provided. Refreshing dashboard...', 
+                        'success'
+                    );
+                    
+                    // Clear uploaded files state
+                    uploadedFiles.resume = null;
+                    uploadedFiles.jd = null;
+                    
+                    // Reset file inputs
+                    document.getElementById('resume-file').value = '';
+                    document.getElementById('jd-file').value = '';
+                    document.getElementById('jd-textarea').value = '';
+                    
+                    // Hide file info sections
+                    document.getElementById('resume-file-info').style.display = 'none';
+                    document.getElementById('jd-file-info').style.display = 'none';
+                    
+                    // Hide combined section and refresh page after delay
+                    setTimeout(() => {
+                        document.getElementById('combined-submit-section').style.display = 'none';
+                        // Refresh the dashboard page to reflect new uploads
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showMessage('combined-message', data.error || 'Upload failed', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showMessage('combined-message', 'Network error occurred', 'error');
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
         // File upload handlers
         document.getElementById('resume-upload-btn').addEventListener('click', function() {
             document.getElementById('resume-file').click();
@@ -763,7 +1207,7 @@
 
         // Resume submit button
         document.getElementById('resume-submit-btn').addEventListener('click', function() {
-            submitUploadedFile('resume', '/process_resume');
+            submitIndividualFile('resume');
         });
 
         // Job description file upload
@@ -784,7 +1228,7 @@
 
         // Job description submit button (for file uploads)
         document.getElementById('jd-submit-btn').addEventListener('click', function() {
-            submitUploadedFile('jd', '/process_job_description');
+            submitIndividualFile('jd');
         });
 
         // Write job description functionality
@@ -792,6 +1236,9 @@
             const container = document.getElementById('jd-textarea-container');
             container.classList.add('active');
             document.getElementById('jd-textarea').focus();
+            
+            // Update input state to show text mode is active
+            updateJDInputState('text', false);
         });
 
         document.getElementById('cancel-jd-btn').addEventListener('click', function() {
@@ -799,6 +1246,9 @@
             container.classList.remove('active');
             document.getElementById('jd-textarea').value = '';
             updateCharCount();
+            
+            // Reset input state - neither mode active
+            updateJDInputState(null, false);
         });
 
         // Character counter for textarea
@@ -818,11 +1268,28 @@
             }
         }
 
-        textarea.addEventListener('input', updateCharCount);
+        textarea.addEventListener('input', function() {
+            updateCharCount();
+            
+            // Update JD input state based on text content
+            const hasContent = textarea.value.trim().length > 0;
+            updateJDInputState('text', hasContent);
+        });
+
+        // Combined submit button
+        document.getElementById('combined-submit-btn').addEventListener('click', function() {
+            submitBothFiles();
+        });
 
         // Submit job description text
         document.getElementById('submit-jd-btn').addEventListener('click', function() {
             const jobDescription = textarea.value.trim();
+            
+            // Check if resume is uploaded first (Use Case 2 validation)
+            if (!uploadedFiles.resume) {
+                showMessage('jd-message', 'Resume is mandatory. Please upload your resume first before submitting the job description.', 'error');
+                return;
+            }
             
             if (jobDescription.length < CONFIG.MIN_JD_LENGTH) {
                 showMessage('jd-message', `Job description must be at least ${CONFIG.MIN_JD_LENGTH} characters long`, 'error');
@@ -855,12 +1322,23 @@
             })
             .then(data => {
                 if (data.success) {
-                    showMessage('jd-message', data.message || 'Job description submitted successfully', 'success');
+                    // Create a file-like object for text job description
+                    const textBlob = new Blob([jobDescription], { type: 'text/plain' });
+                    const textFile = new File([textBlob], 'job_description_text.txt', { type: 'text/plain' });
+                    
+                    // Store the text content for later retrieval
+                    textFile.textContent = jobDescription;
+                    
+                    uploadedFiles.jd = textFile;
+                    uploadedFiles.jd.name = 'Job Description (Text)';
+                    
+                    showMessage('jd-message', 'Job description ready for submission', 'success');
                     document.getElementById('jd-textarea-container').classList.remove('active');
-                    textarea.value = '';
-                    updateCharCount();
-                    uploadedFiles.jd = 'Text Description';
+                    
                     showFileInfo('jd', 'Job Description (Text)');
+                    
+                    // Check if both files are ready for combined submit
+                    checkCombinedSubmitReadiness();
                 } else {
                     showMessage('jd-message', data.message || 'Submission failed', 'error');
                 }
@@ -900,14 +1378,26 @@
             })
             .then(data => {
                 if (data.success) {
-                    showMessage(messageId, data.message || 'File uploaded successfully', 'success');
-                    uploadedFiles[fileType] = sanitizeFilename(data.original_filename || file.name);
-                    showFileInfo(fileType, uploadedFiles[fileType]);
+                    // Store file for submission
+                    uploadedFiles[fileType] = file;
+                    uploadedFiles[fileType].name = sanitizeFilename(file.name);
+                    
+                    showMessage(messageId, 'File ready for submission', 'success');
+                    showFileInfo(fileType, uploadedFiles[fileType].name);
+                    
+                    // Update JD input state if this is a job description file
+                    if (fileType === 'jd') {
+                        updateJDInputState('file', true);
+                    }
+                    
+                    // Check combined submit readiness and handle use cases
+                    checkCombinedSubmitReadiness();
                 } else {
                     showMessage(messageId, data.message || 'Upload failed', 'error');
-                    button.innerHTML = originalText;
-                    button.disabled = false;
                 }
+                
+                button.innerHTML = originalText;
+                button.disabled = false;
             })
             .catch(error => {
                 showMessage(messageId, 'Upload failed. Please try again.', 'error');
@@ -925,12 +1415,11 @@
             const submitBtn = document.getElementById(fileType + '-submit-btn');
             
             filenameEl.textContent = filename;
-            fileInfo.classList.add('show');
+            fileInfo.style.display = 'block';
             uploadBtn.style.display = 'none';
             
-            if (submitBtn) {
-                submitBtn.style.display = 'inline-flex';
-            }
+            // Submit button visibility will be controlled by checkCombinedSubmitReadiness
+            // Don't show individual submit buttons here as they're handled by use cases
             
             if (fileType === 'jd') {
                 document.getElementById('write-jd-btn').style.display = 'none';
@@ -986,7 +1475,7 @@
             });
         }
 
-        // Remove file
+        // Remove file - handles all use cases
         function removeFile(fileType) {
             uploadedFiles[fileType] = null;
             
@@ -995,7 +1484,8 @@
             const submitBtn = document.getElementById(fileType + '-submit-btn');
             const fileInput = document.getElementById(fileType + '-file');
             
-            fileInfo.classList.remove('show');
+            // Reset UI elements
+            fileInfo.style.display = 'none';
             uploadBtn.style.display = 'inline-flex';
             uploadBtn.innerHTML = '<span>📤</span> Choose File';
             uploadBtn.disabled = false;
@@ -1003,7 +1493,6 @@
             if (submitBtn) {
                 submitBtn.style.display = 'none';
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = submitBtn.innerHTML.replace('Processing...', submitBtn.getAttribute('data-original-text') || 'Submit');
             }
             
             if (fileInput) {
@@ -1011,8 +1500,31 @@
             }
             
             if (fileType === 'jd') {
-                document.getElementById('write-jd-btn').style.display = 'inline-flex';
+                // Reset JD input state when file is removed
+                updateJDInputState(null, false);
+                // Clear any JD-related error messages
+                showMessage('jd-message', '', 'success');
             }
+            
+            // Handle use cases based on what remains
+            const resumeExists = uploadedFiles.resume !== null;
+            const jdExists = uploadedFiles.jd !== null;
+            
+            // Use Case 3.1.1: Removed JD, resume remains - show individual submit for resume
+            if (fileType === 'jd' && resumeExists) {
+                document.getElementById('combined-submit-section').style.display = 'none';
+                document.getElementById('resume-submit-btn').style.display = 'inline-block';
+            }
+            
+            // Use Case 3.1.2: Removed resume, JD remains - apply use case 2 (not allowed)
+            if (fileType === 'resume' && jdExists) {
+                document.getElementById('combined-submit-section').style.display = 'none';
+                document.getElementById('jd-submit-btn').style.display = 'none';
+                showMessage('jd-message', 'Resume is mandatory. Please upload your resume first before submitting the job description.', 'error');
+            }
+            
+            // Recheck combined submit readiness
+            checkCombinedSubmitReadiness();
         }
 
         // Show message function

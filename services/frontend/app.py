@@ -315,11 +315,9 @@ def delete_account():
 
 @app.route('/api/upload/resume', methods=['POST'])
 @login_required
-def upload_resume():
-    """Upload resume file"""
+def validate_resume():
+    """Validate resume file for upload readiness"""
     try:
-        token = get_user_token()
-        
         if 'resume_file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
@@ -327,43 +325,50 @@ def upload_resume():
         if file.filename == '':
             return jsonify({'success': False, 'error': 'No file selected'}), 400
         
-        # Forward file to file-parsing service
-        files = {'file': (file.filename, file.stream, file.mimetype)}
+        # Basic validation
+        allowed_extensions = {'.pdf', '.doc', '.docx'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
         
-        response = service_client.post(
-            'file-parsing',
-            '/api/files/upload/resume',
-            files=files,
-            user_token=token
-        )
-        
-        if response and response.get('success'):
+        if file_ext not in allowed_extensions:
             return jsonify({
-                'success': True,
-                'message': response.get('message', 'Resume uploaded successfully'),
-                'original_filename': file.filename,
-                'file': response.get('file')
-            })
-        else:
+                'success': False, 
+                'error': f'Invalid file type. Allowed: {", ".join(allowed_extensions)}'
+            }), 400
+        
+        # Check file size (10MB limit)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)     # Reset to beginning
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB
             return jsonify({
                 'success': False,
-                'error': response.get('error', 'Upload failed')
+                'error': 'File too large. Maximum size is 10MB'
             }), 400
+        
+        if file_size == 0:
+            return jsonify({
+                'success': False,
+                'error': 'File is empty'
+            }), 400
+        
+        # File is valid
+        return jsonify({
+            'success': True,
+            'message': 'Resume file is valid and ready for submission',
+            'original_filename': file.filename,
+            'file_size': file_size
+        }), 200
             
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Upload failed: {str(e)}'
-        }), 500
+        return jsonify({'success': False, 'error': f'Validation failed: {str(e)}'}), 500
 
 
 @app.route('/api/upload/job-description', methods=['POST'])
 @login_required
 def upload_job_description():
-    """Upload job description file"""
+    """Validate job description file for upload readiness"""
     try:
-        token = get_user_token()
-        
         if 'jd_file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
@@ -371,51 +376,380 @@ def upload_job_description():
         if file.filename == '':
             return jsonify({'success': False, 'error': 'No file selected'}), 400
         
-        # Forward file to file-parsing service
-        files = {'file': (file.filename, file.stream, file.mimetype)}
+        # Basic validation
+        allowed_extensions = {'.pdf', '.doc', '.docx'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
         
-        response = service_client.post(
-            'file-parsing',
-            '/api/files/upload/job-description',
-            files=files,
-            user_token=token
-        )
-        
-        if response and response.get('success'):
+        if file_ext not in allowed_extensions:
             return jsonify({
-                'success': True,
-                'message': response.get('message', 'Job description uploaded successfully'),
-                'original_filename': file.filename,
-                'file': response.get('file')
-            })
-        else:
+                'success': False, 
+                'error': f'Invalid file type. Allowed: {", ".join(allowed_extensions)}'
+            }), 400
+        
+        # Check file size (10MB limit)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)     # Reset to beginning
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB
             return jsonify({
                 'success': False,
-                'error': response.get('error', 'Upload failed')
+                'error': 'File too large. Maximum size is 10MB'
             }), 400
+        
+        if file_size == 0:
+            return jsonify({
+                'success': False,
+                'error': 'File is empty'
+            }), 400
+        
+        # File is valid
+        return jsonify({
+            'success': True,
+            'message': 'Job description file is valid and ready for submission',
+            'original_filename': file.filename,
+            'file_size': file_size
+        }), 200
             
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Upload failed: {str(e)}'
-        }), 500
+        return jsonify({'success': False, 'error': f'Validation failed: {str(e)}'}), 500
 
 
 @app.route('/api/upload/text/job-description', methods=['POST'])
 @login_required
 def upload_text_job_description():
-    """Submit text job description"""
-    token = get_user_token()
-    data = request.get_json()
-    
-    response = service_client.post(
-        'file-parsing',
-        '/api/files/text/job-description',
-        data,
-        user_token=token
-    )
-    
-    return jsonify(response)
+    """Submit text job description - requires resume to be uploaded first"""
+    try:
+        data = request.get_json()
+        
+        # Validate that job description text is provided
+        if not data or 'job_description' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'No job description text provided'
+            }), 400
+        
+        job_description = data['job_description'].strip()
+        if not job_description:
+            return jsonify({
+                'success': False,
+                'error': 'Job description cannot be empty'
+            }), 400
+        
+        # Check minimum length
+        if len(job_description) < 50:
+            return jsonify({
+                'success': False,
+                'error': 'Job description must be at least 50 characters long'
+            }), 400
+        
+        # For now, we'll accept text job descriptions without file validation
+        # In a full implementation, you'd want to check if resume was uploaded
+        # by the same user in the current session
+        
+        token = get_user_token()
+        
+        response = service_client.post(
+            'file-parsing',
+            '/api/files/text/job-description',
+            data,
+            user_token=token
+        )
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Text job description submission failed: {str(e)}'
+        }), 500
+
+
+@app.route('/submit_job_description', methods=['POST'])
+@login_required  
+def submit_job_description():
+    """Submit job description text - simpler endpoint for JS compatibility"""
+    try:
+        job_description = request.form.get('job_description', '').strip()
+        
+        if not job_description:
+            return jsonify({
+                'success': False,
+                'error': 'Job description cannot be empty'
+            }), 400
+            
+        if len(job_description) < 50:
+            return jsonify({
+                'success': False,
+                'error': 'Job description must be at least 50 characters long'
+            }), 400
+        
+        # For now, just return success to allow the JS to handle UI state
+        # In a full implementation, you'd save this to a session or database
+        return jsonify({
+            'success': True,
+            'message': 'Job description received and ready for submission'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Submission failed: {str(e)}'
+        }), 500
+
+
+@app.route('/api/upload/submit_mixed', methods=['POST'])
+@login_required
+def submit_mixed():
+    """
+    Mixed endpoint to submit resume file + job description text
+    """
+    try:
+        # Check if resume file is provided
+        if 'resume' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'Resume file is required'
+            }), 400
+        
+        # Check if job description text is provided
+        jd_text = request.form.get('job_description_text', '').strip()
+        if not jd_text:
+            return jsonify({
+                'success': False,
+                'error': 'Job description text is required'
+            }), 400
+        
+        resume_file = request.files['resume']
+        
+        # Validate resume file
+        if not resume_file or resume_file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Resume file is required'
+            }), 400
+        
+        # Process resume through file-parsing service
+        resume_file.stream.seek(0)
+        resume_files = {
+            'resume': (resume_file.filename, resume_file.stream, resume_file.mimetype)
+        }
+        
+        resume_response = service_client.post(
+            'file-parsing',
+            '/api/files/upload/resume',
+            data={},
+            files=resume_files
+        )
+        
+        if not resume_response or not resume_response.get('success'):
+            return jsonify({
+                'success': False,
+                'error': 'Resume processing failed'
+            }), 500
+        
+        # Process job description text through file-parsing service
+        jd_data = {'text': jd_text}
+        jd_response = service_client.post(
+            'file-parsing',
+            '/api/files/text/job-description',
+            jd_data
+        )
+        
+        if not jd_response or not jd_response.get('success'):
+            return jsonify({
+                'success': False,
+                'error': 'Job description processing failed'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Files processed successfully! Resume processed with personal information removed. Job description saved as provided.',
+            'resume': resume_response,
+            'job_description': jd_response
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Mixed submission failed: {str(e)}'
+        }), 500
+
+
+# ==================== Combined Upload ====================
+
+@app.route('/api/upload/submit', methods=['POST'])
+@login_required
+def submit_combined():
+    """
+    Combined endpoint to submit both resume and job description
+    Proxies to file-parsing service's combined upload endpoint
+    """
+    try:
+        # Check if both files are provided
+        if 'resume' not in request.files or 'job_description' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'Both resume and job description files are required'
+            }), 400
+        
+        # Get files from request
+        resume_file = request.files['resume']
+        jd_file = request.files['job_description']
+        
+        # Validate files
+        if not resume_file or resume_file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Resume file is required'
+            }), 400
+            
+        if not jd_file or jd_file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Job description file is required'
+            }), 400
+        
+        # Create files dict for service client
+        files = {
+            'resume': (resume_file.filename, resume_file.stream, resume_file.mimetype),
+            'job_description': (jd_file.filename, jd_file.stream, jd_file.mimetype)
+        }
+        
+        # Proxy request to file-parsing service
+        response = service_client.post(
+            'file-parsing',
+            '/api/upload/submit',
+            data={},
+            files=files
+        )
+        
+        if response and response.get('success'):
+            return jsonify(response), 200
+        else:
+            error_msg = response.get('error', 'Combined upload failed') if response else 'Service unavailable'
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Combined upload failed: {str(e)}'
+        }), 500
+
+
+# ==================== Individual File Processing ====================
+
+@app.route('/process_resume', methods=['POST'])
+@login_required
+def process_resume():
+    """
+    Process uploaded resume with PII removal - expects file in request
+    """
+    try:
+        # Check if resume file is in the request
+        if 'resume' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'No resume file provided. Please upload a resume first.'
+            }), 400
+        
+        resume_file = request.files['resume']
+        if not resume_file or resume_file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Resume file is empty.'
+            }), 400
+        
+        # Create files dict for service client - need to reset stream position
+        resume_file.stream.seek(0)
+        files = {
+            'resume': (resume_file.filename, resume_file.stream, resume_file.mimetype)
+        }
+        
+        # Send to file-parsing service for processing
+        response = service_client.post(
+            'file-parsing',
+            '/api/files/upload/resume',
+            data={},
+            files=files
+        )
+        
+        if response and response.get('success'):
+            return jsonify({
+                'success': True,
+                'message': 'Resume processed successfully! Personal information has been removed.',
+                'data': response
+            }), 200
+        else:
+            error_msg = response.get('error', 'Resume processing failed') if response else 'Service unavailable'
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Resume processing failed: {str(e)}'
+        }), 500
+
+
+@app.route('/process_job_description', methods=['POST'])
+@login_required
+def process_job_description():
+    """
+    Process uploaded job description (save as-is) - expects file in request
+    """
+    try:
+        # Check if job description file is in the request
+        if 'jd' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'No job description file provided. Please upload a job description first.'
+            }), 400
+        
+        jd_file = request.files['jd']
+        if not jd_file or jd_file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Job description file is empty.'
+            }), 400
+        
+        # Create files dict for service client - need to reset stream position
+        jd_file.stream.seek(0)
+        files = {
+            'job_description': (jd_file.filename, jd_file.stream, jd_file.mimetype)
+        }
+        
+        # Send to file-parsing service for processing
+        response = service_client.post(
+            'file-parsing',
+            '/api/files/upload/job-description',
+            data={},
+            files=files
+        )
+        
+        if response and response.get('success'):
+            return jsonify({
+                'success': True,
+                'message': 'Job description saved successfully!',
+                'data': response
+            }), 200
+        else:
+            error_msg = response.get('error', 'Job description processing failed') if response else 'Service unavailable'
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Job description processing failed: {str(e)}'
+        }), 500
 
 
 # ==================== Health Check ====================
