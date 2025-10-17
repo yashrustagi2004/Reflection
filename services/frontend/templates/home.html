@@ -94,6 +94,7 @@
             flex: 1;
             margin-left: 250px;
             padding: 40px;
+            padding-bottom: 120px;
             min-height: 100vh;
         }
 
@@ -398,7 +399,124 @@
         .combined-submit-notes ul {
             list-style: none;
             padding-left: 0;
-            margin: 0;
+        }
+
+        /* Simple Combined Submit Section Styling */
+        .simple-combined-submit {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-30%);
+            padding: 25px 40px;
+            text-align: center;
+            z-index: 999;
+            animation: slideUpSubmit 0.5s ease-out;
+        }
+
+        @keyframes slideUpSubmit {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .simple-combined-submit #combined-submit-btn {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .simple-combined-submit #combined-submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .simple-combined-submit #combined-submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .simple-combined-submit #combined-submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .simple-combined-submit #combined-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            background: #9ca3af;
+        }
+
+        .simple-combined-submit #combined-submit-btn span {
+            font-size: 20px;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+        }
+
+        .simple-combined-submit .message {
+            margin-top: 15px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .simple-combined-submit .message.success {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: 2px solid #047857;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            animation: successPulse 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .simple-combined-submit .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         .combined-submit-notes li {
@@ -580,6 +698,7 @@
             .main-content {
                 margin-left: 0;
                 padding: 20px;
+                padding-bottom: 100px;
             }
 
             .mobile-menu-toggle {
@@ -599,11 +718,24 @@
             .page-subtitle {
                 font-size: 16px;
             }
+
+            /* Submit button responsive for tablet */
+            .simple-combined-submit {
+                left: 0;
+                padding: 20px 30px;
+            }
+
+            .simple-combined-submit #combined-submit-btn {
+                min-width: 250px;
+                font-size: 16px;
+                padding: 16px 35px;
+            }
         }
 
         @media (max-width: 480px) {
             .main-content {
                 padding: 15px;
+                padding-bottom: 90px;
             }
 
             .feature-card {
@@ -617,6 +749,18 @@
             .upload-btn {
                 font-size: 14px;
                 padding: 12px 20px;
+            }
+
+            /* Submit button responsive for mobile */
+            .simple-combined-submit {
+                padding: 15px 20px;
+            }
+
+            .simple-combined-submit #combined-submit-btn {
+                min-width: 200px;
+                font-size: 14px;
+                padding: 14px 25px;
+                letter-spacing: 0.5px;
             }
         }
     </style>
@@ -710,7 +854,6 @@
                             </form>
                             
                             <div class="file-info" id="resume-file-info">
-                                <span class="file-info-icon">✅</span>
                                 <span class="file-info-text" id="resume-filename"></span>
                                 <button class="file-info-remove" onclick="removeFile('resume')">Remove</button>
                             </div>
@@ -758,7 +901,6 @@
                             </button>
                             
                             <div class="file-info" id="jd-file-info">
-                                <span class="file-info-icon">✅</span>
                                 <span class="file-info-text" id="jd-filename"></span>
                                 <button class="file-info-remove" onclick="removeFile('jd')">Remove</button>
                             </div>
@@ -780,7 +922,6 @@
                                 </div>
                                 <div class="button-group">
                                     <button type="button" class="upload-btn" id="submit-jd-btn">
-                                        <span>✅</span>
                                         Submit
                                     </button>
                                     <button type="button" class="upload-btn cancel" id="cancel-jd-btn">
@@ -801,10 +942,9 @@
                 </div>
 
                 <!-- Simple Combined Submit Button -->
-                <div class="simple-combined-submit" id="combined-submit-section" style="display: none; text-align: center; margin-top: 30px;">
-                    <button type="button" class="upload-btn submit primary" id="combined-submit-btn" style="padding: 15px 30px; font-size: 16px;">
-                        <span>🎯</span>
-                        Submit & Generate Questions
+                <div class="simple-combined-submit" id="combined-submit-section" style="display: none;">
+                    <button type="button" class="upload-btn submit primary" id="combined-submit-btn">
+                        Submit
                     </button>
                     <div class="message" id="combined-message"></div>
                 </div>
@@ -1040,7 +1180,9 @@
                         processingState.resumeProcessed = true;
                         updateProcessingState();
                         
-                        showMessage(`${type}-message`, 'Resume processed successfully! Personal information has been removed. You can now upload a job description.', 'success');
+                        // Clear any existing messages
+                        document.getElementById('resume-message').textContent = '';
+                        document.getElementById('resume-message').className = 'message';
                         
                         // Hide resume submit button after successful processing
                         button.style.display = 'none';
@@ -1055,13 +1197,9 @@
                             processingState.resumeProcessed = false;
                             updateProcessingState();
                             
-                            showMessage('resume-message', 'Upload completed successfully! Refreshing dashboard...', 'success');
-                            
-                            // Refresh the page after showing success message
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        }, 2000);
+                            // Refresh the page directly without showing additional messages
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         showMessage(`${type}-message`, data.message || 'File processed successfully!', 'success');
                     }
@@ -1142,8 +1280,13 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Clear any existing messages first
+                    document.getElementById('combined-message').textContent = '';
+                    document.getElementById('combined-message').className = 'message';
+                    
+                    // Show brief success message
                     showMessage('combined-message', 
-                        'Files uploaded successfully! Resume processed with personal information removed. Job description saved as provided. Refreshing dashboard...', 
+                        'Processing completed successfully!', 
                         'success'
                     );
                     
@@ -1382,7 +1525,6 @@
                     uploadedFiles[fileType] = file;
                     uploadedFiles[fileType].name = sanitizeFilename(file.name);
                     
-                    showMessage(messageId, 'File ready for submission', 'success');
                     showFileInfo(fileType, uploadedFiles[fileType].name);
                     
                     // Update JD input state if this is a job description file

@@ -1,32 +1,187 @@
+# Environment variables
 *.env
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
 
-# Python cache
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
 # Virtual environments
 env/
 venv/
 ENV/
 .venv/
+myenv/
+.env/
+env.bak/
+venv.bak/
+pyvenv.cfg
 
 # Distribution / packaging
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
 
 # IDE settings
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 
 # Logs and temp files
 *.log
 *.tmp
 *.bak
+logs/
+*.out
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Project specific
+uploads/
+services/*/uploads/
+services/file-parsing/uploads/
+data/uploads/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Session files
+flask_session/
+
+# Local configuration
+local_settings.py
+settings_local.py
+
+# Media files (if you don't want to track them)
+media/
+static/uploads/
+
+# Backup files
+*.backup
+*.old
+
+# Docker
+.dockerignore
+Dockerfile.local
+
+# Redis
+dump.rdb
+
+# MongoDB
+mongodb.log
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Temporary folders
+tmp/
+temp/
