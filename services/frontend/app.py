@@ -534,12 +534,14 @@ def submit_mixed():
         resume_files = {
             'resume': (resume_file.filename, resume_file.stream, resume_file.mimetype)
         }
-        
+
+        user_token = get_user_token()
         resume_response = service_client.post(
             'file-parsing',
             '/api/files/upload/resume',
             data={},
-            files=resume_files
+            files=resume_files,
+            user_token=user_token
         )
         
         if not resume_response or not resume_response.get('success'):
@@ -553,7 +555,8 @@ def submit_mixed():
         jd_response = service_client.post(
             'file-parsing',
             '/api/files/text/job-description',
-            jd_data
+            jd_data,
+            user_token=user_token
         )
         
         if not jd_response or not jd_response.get('success'):
@@ -617,11 +620,13 @@ def submit_combined():
         }
         
         # Proxy request to file-parsing service
+        user_token = get_user_token()
         response = service_client.post(
             'file-parsing',
             '/api/upload/submit',
             data={},
-            files=files
+            files=files,
+            user_token=user_token
         )
         
         if response and response.get('success'):
@@ -670,11 +675,13 @@ def process_resume():
         }
         
         # Send to file-parsing service for processing
+        user_token = get_user_token()
         response = service_client.post(
             'file-parsing',
             '/api/files/upload/resume',
             data={},
-            files=files
+            files=files,
+            user_token=user_token
         )
         
         if response and response.get('success'):
@@ -725,11 +732,13 @@ def process_job_description():
         }
         
         # Send to file-parsing service for processing
+        user_token = get_user_token()
         response = service_client.post(
             'file-parsing',
             '/api/files/upload/job-description',
             data={},
-            files=files
+            files=files,
+            user_token=user_token
         )
         
         if response and response.get('success'):
