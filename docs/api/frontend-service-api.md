@@ -202,95 +202,25 @@ confirmation: "delete my account" (exact string required)
 
 ### File Upload Endpoints
 
-#### POST /api/upload/resume
-**Description**: Upload resume file for interview preparation  
-**Authentication**: Required  
-**Content-Type**: `multipart/form-data`  
-**Request Body**:
-- `resume_file`: File (PDF, DOC, DOCX, max 10MB)
+```bash
+##uploading resume only
+"GET /dashboard HTTP/1.1" 200 -
+"POST /api/upload/resume HTTP/1.1" 200 -
+"POST /process_resume HTTP/1.1" 200 -
+"GET /dashboard HTTP/1.1" 200 -
 
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Resume uploaded successfully",
-  "original_filename": "my_resume.pdf",
-  "file": {
-    "filename": "resume_user123_1634567890.pdf",
-    "original_name": "my_resume.pdf", 
-    "size": 1048576,
-    "mime_type": "application/pdf"
-  }
-}
+## uploading both resume and JD (JD via file)
+"POST /api/upload/resume HTTP/1.1" 200 -
+"POST /api/upload/job-description HTTP/1.1" 200 -
+"POST /api/upload/submit HTTP/1.1" 200 -
+"GET /dashboard HTTP/1.1" 200 -
+
+## uploading both resume and JD (JD via text)
+"POST /api/upload/resume HTTP/1.1" 200 -
+"POST /submit_job_description HTTP/1.1" 200 -
+"POST /api/upload/submit_mixed HTTP/1.1" 200 -
+"GET /dashboard HTTP/1.1" 200 -
 ```
-
-**Flow**:
-1. Receives multipart file upload from browser
-2. Forwards file to File Parsing service for validation and storage
-3. File Parsing service stores file and updates user record
-4. Returns upload confirmation to user
-**Purpose**: Allow users to upload resumes for personalized interview questions
-
-#### POST /api/upload/job-description  
-**Description**: Upload job description file for role-specific questions  
-**Authentication**: Required  
-**Content-Type**: `multipart/form-data`  
-**Request Body**:
-- `jd_file`: File (PDF, DOC, DOCX, max 10MB)
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Job description uploaded successfully", 
-  "original_filename": "job_posting.pdf",
-  "file": {
-    "filename": "jd_user123_1634567890.pdf",
-    "original_name": "job_posting.pdf",
-    "size": 2097152,
-    "mime_type": "application/pdf" 
-  }
-}
-```
-
-**Flow**:
-1. Receives multipart file upload from browser
-2. Forwards file to File Parsing service for validation and storage  
-3. File Parsing service stores file and updates user record
-4. Returns upload confirmation to user
-**Purpose**: Allow users to upload job descriptions for role-specific interview preparation
-
-#### POST /api/upload/text/job-description
-**Description**: Submit job description as text instead of file  
-**Authentication**: Required  
-**Content-Type**: `application/json`  
-**Request Body**:
-```json
-{
-  "text": "Software Developer position requiring Python, Flask, REST APIs, and database experience. Looking for someone with 3+ years experience..."
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Job description saved successfully",
-  "file": {
-    "filename": "jd_text_user123_1634567890.txt",
-    "size": 512
-  }
-}
-```
-
-**Flow**:
-1. Receives text job description from web form
-2. Forwards to File Parsing service for text validation and storage
-3. File Parsing service saves as text file and updates user record  
-4. Returns confirmation to user
-**Purpose**: Provide alternative to file upload for users who want to paste job description text
-
----
 
 ### Utility Endpoints
 

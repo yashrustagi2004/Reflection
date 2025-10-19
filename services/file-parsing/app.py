@@ -40,6 +40,13 @@ service_client = ServiceClient('file-parsing')
 file_security = FileSecurityService()
 file_parser = FileParserService()
 
+# Global storage for parsed content
+parsed_content_storage = {
+    'resume_file_content': None,
+    'jd_file_content': None,
+    'jd_text_content': None
+}
+
 
 # ==================== Health Check ====================
 
@@ -121,6 +128,12 @@ def upload_resume():
                     'success': False,
                     'error': 'Failed to parse resume content'
                 }), 500
+            
+            # Store parsed content in global variable
+            global parsed_content_storage
+            parsed_content_storage['resume_file_content'] = cleaned_text
+            print(f"[FILE PARSING] Resume file content stored: {len(cleaned_text)} characters")
+            print(f"[FILE PARSING] Resume preview: {cleaned_text[:200]}...")
             
             # Save the cleaned content as a new text file
             final_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes', safe_filename.rsplit('.', 1)[0] + '_cleaned.txt')
@@ -227,6 +240,20 @@ def upload_job_description():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', safe_filename)
         file.save(file_path)
         
+        # Parse job description content and store in variable
+        try:
+            # Parse the job description to extract text content
+            jd_text_content = EnhancedFileParser.parse_file(file_path, remove_pii=False)
+            if jd_text_content:
+                # Store parsed content in global variable
+                global parsed_content_storage
+                parsed_content_storage['jd_file_content'] = jd_text_content
+                print(f"[FILE PARSING] JD file content stored: {len(jd_text_content)} characters")
+                print(f"[FILE PARSING] JD preview: {jd_text_content[:200]}...")
+        except Exception as e:
+            print(f"Warning: Failed to parse job description for storage: {e}")
+            # Continue execution even if parsing fails
+        
         # Get file metadata
         file_metadata = file_security.get_file_metadata(file_path)
         
@@ -300,6 +327,12 @@ def save_text_job_description():
         # Sanitize and save
         sanitized_text = file_security.sanitize_text(text_content)
         user_id = 'anonymous'  # Temporary fix for authentication
+        
+        # Store text content in global variable
+        global parsed_content_storage
+        parsed_content_storage['jd_text_content'] = sanitized_text
+        print(f"[FILE PARSING] JD text content stored: {len(sanitized_text)} characters")
+        print(f"[FILE PARSING] JD text preview: {sanitized_text[:200]}...")
         
         # Generate filename
         filename = f"jd_text_{user_id}_{int(__import__('time').time())}.txt"
@@ -418,6 +451,12 @@ def submit_resume_and_jd():
                     'error': 'Failed to parse resume content'
                 }), 500
             
+            # Store parsed resume content in global variable
+            global parsed_content_storage
+            parsed_content_storage['resume_file_content'] = cleaned_text
+            print(f"[FILE PARSING] Combined upload - Resume content stored: {len(cleaned_text)} characters")
+            print(f"[FILE PARSING] Combined upload - Resume preview: {cleaned_text[:200]}...")
+            
             # Save cleaned resume
             resume_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes', 
                                            resume_filename.rsplit('.', 1)[0] + '_cleaned.txt')
@@ -467,6 +506,18 @@ def submit_resume_and_jd():
             # Save JD as-is (no parsing)
             jd_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', jd_filename)
             jd_file.save(jd_final_path)
+            
+            # Parse job description content and store in variable
+            try:
+                jd_text_content = EnhancedFileParser.parse_file(jd_final_path, remove_pii=False)
+                if jd_text_content:
+                    # Store parsed JD content in global variable
+                    parsed_content_storage['jd_file_content'] = jd_text_content
+                    print(f"[FILE PARSING] Combined upload - JD content stored: {len(jd_text_content)} characters")
+                    print(f"[FILE PARSING] Combined upload - JD preview: {jd_text_content[:200]}...")
+            except Exception as e:
+                print(f"Warning: Failed to parse job description for storage: {e}")
+                # Continue execution even if parsing fails
             
             jd_metadata = file_security.get_file_metadata(jd_final_path)
             results['job_description'] = {
@@ -603,8 +654,103 @@ def get_upload_requirements():
     }), 200
 
 
+@app.route('/api/files/parsed-content', methods=['GET'])
+def get_parsed_content():
+    """
+    Get the stored parsed content for resume and job description
+    
+    Returns:
+        Dictionary containing parsed content for both resume and JD
+    """
+    try:
+        global parsed_content_storage
+        
+        print(f"[FILE PARSING] Parsed content requested. Current storage:")
+        for key, value in parsed_content_storage.items():
+            if value:
+                print(f"  - {key}: {len(value)} characters")
+            else:
+                print(f"  - {key}: None")
+        
+        return jsonify({
+            'success': True,
+            'parsed_content': {
+                'resume_file_content': parsed_content_storage.get('resume_file_content'),
+                'jd_file_content': parsed_content_storage.get('jd_file_content'),
+                'jd_text_content': parsed_content_storage.get('jd_text_content')
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to retrieve parsed content: {str(e)}'
+        }), 500
+
+
+@app.route('/api/files/clear-content', methods=['POST'])
+def clear_parsed_content():
+    """
+    Clear all stored parsed content
+    
+    Returns:
+        Success message
+    """
+    try:
+        global parsed_content_storage
+        parsed_content_storage = {
+            'resume_file_content': None,
+            'jd_file_content': None,
+            'jd_text_content': None
+        }
+        print("[FILE PARSING] All parsed content cleared")
+        
+        return jsonify({
+            'success': True,
+            'message': 'All parsed content cleared successfully'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to clear content: {str(e)}'
+        }), 500
+
+
+@app.route('/api/files/content-status', methods=['GET'])
+def get_content_status():
+    """
+    Get status of what content is currently stored
+    
+    Returns:
+        Status of each content type (whether it exists or not)
+    """
+    try:
+        global parsed_content_storage
+        
+        status = {
+            'resume_file_uploaded': parsed_content_storage.get('resume_file_content') is not None,
+            'jd_file_uploaded': parsed_content_storage.get('jd_file_content') is not None,
+            'jd_text_uploaded': parsed_content_storage.get('jd_text_content') is not None
+        }
+        
+        return jsonify({
+            'success': True,
+            'status': status,
+            'any_content_available': any(status.values())
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to get content status: {str(e)}'
+        }), 500
+
+
 if __name__ == '__main__':
     port = int(os.getenv('FILE_PARSING_PORT', 5002))
+    print(f"[FILE PARSING] Starting service on port {port}")
+    print(f"[FILE PARSING] Initial parsed content storage: {parsed_content_storage}")
     app.run(
         host='0.0.0.0',
         port=port,
