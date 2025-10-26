@@ -244,7 +244,7 @@ def dashboard():
 
 
 @app.route('/practice')
-# @login_required  # Temporarily disabled for testing
+@login_required
 def practice():
     """Practice page for interview questions"""
     token = get_user_token()
@@ -271,7 +271,7 @@ def practice():
 
 
 @app.route('/question/<int:question_id>')
-# @login_required  # Temporarily disabled for testing
+@login_required
 def question_detail(question_id):
     """Question detail page"""
     filter_param = request.args.get('filter', 'most-asked')
@@ -816,7 +816,7 @@ def health_check():
 # ==================== Practice API Endpoints ====================
 
 @app.route('/api/practice/generate-questions', methods=['POST'])
-# @login_required  # Temporarily disabled for testing
+@login_required
 def generate_questions():
     """Generate interview questions based on user's resume and job description"""
     try:
@@ -861,7 +861,7 @@ def generate_questions():
 
 
 @app.route('/api/practice/analyze-answer', methods=['POST'])
-# @login_required  # Temporarily disabled for testing
+@login_required
 def analyze_answer():
     """Analyze user's answer to a question"""
     try:
