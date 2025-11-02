@@ -482,7 +482,7 @@ def submit_resume_and_jd():
                 'error': f'Resume processing failed: {str(e)}'
             }), 500
         
-        # Process Job Description (no parsing, save as-is)
+        # Process Job Description — always save as .txt (parse when possible)
         try:
             # Validate JD file
             is_valid, message, validation_details = file_security.validate_upload(jd_file)
@@ -495,39 +495,81 @@ def submit_resume_and_jd():
                     'error': f'Job description validation failed: {message}',
                     'details': validation_details
                 }), 400
-            
-            # Generate secure filename for JD
+
+            # Generate secure filename for JD (used as a base for the txt file)
             jd_filename = file_security.generate_secure_filename(
                 jd_file.filename,
                 user_id,
                 'job_description'
             )
-            
-            # Save JD as-is (no parsing)
-            jd_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', jd_filename)
-            jd_file.save(jd_final_path)
-            
-            # Parse job description content and store in variable
+
+            # Save original upload to a temporary file, then produce a .txt file
+            temp_jd_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', f"temp_{jd_filename}")
+            jd_file.save(temp_jd_path)
+
+            # Try to parse the uploaded file to extract text
+            jd_text_content = None
             try:
-                jd_text_content = EnhancedFileParser.parse_file(jd_final_path, remove_pii=False)
-                if jd_text_content:
-                    # Store parsed JD content in global variable
-                    parsed_content_storage['jd_file_content'] = jd_text_content
-                    print(f"[FILE PARSING] Combined upload - JD content stored: {len(jd_text_content)} characters")
-                    print(f"[FILE PARSING] Combined upload - JD preview: {jd_text_content[:200]}...")
+                jd_text_content = EnhancedFileParser.parse_file(temp_jd_path, remove_pii=False)
             except Exception as e:
                 print(f"Warning: Failed to parse job description for storage: {e}")
-                # Continue execution even if parsing fails
-            
+
+            # Final text filename (force .txt)
+            final_txt_filename = jd_filename.rsplit('.', 1)[0] + '.txt'
+            jd_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', final_txt_filename)
+
+            # If parsing succeeded, write parsed text; otherwise try to decode raw bytes as a fallback
+            if jd_text_content:
+                with open(jd_final_path, 'w', encoding='utf-8') as f:
+                    f.write(jd_text_content)
+                # Store parsed JD content in global variable
+                parsed_content_storage['jd_file_content'] = jd_text_content
+                print(f"[FILE PARSING] Combined upload - JD content stored: {len(jd_text_content)} characters")
+                print(f"[FILE PARSING] Combined upload - JD preview: {jd_text_content[:200]}...")
+            else:
+                # Fallback: attempt to decode the uploaded file bytes to text
+                try:
+                    with open(temp_jd_path, 'rb') as rb:
+                        raw = rb.read()
+
+                    decoded = None
+                    for enc in ('utf-8', 'latin-1', 'cp1252'):
+                        try:
+                            decoded = raw.decode(enc)
+                            break
+                        except Exception:
+                            continue
+                    if decoded is None:
+                        # As a final fallback, decode with errors replaced
+                        decoded = raw.decode('utf-8', errors='replace')
+
+                    with open(jd_final_path, 'w', encoding='utf-8') as f:
+                        f.write(decoded)
+                    print(f"[FILE PARSING] Combined upload - JD saved by decoding raw bytes to text ({len(decoded)} characters)")
+                except Exception as e:
+                    # Clean up and report error (clean resume file if present)
+                    if os.path.exists(temp_jd_path):
+                        os.remove(temp_jd_path)
+                    if results['resume'] and os.path.exists(resume_final_path):
+                        os.remove(resume_final_path)
+                    return jsonify({
+                        'success': False,
+                        'error': f'Job description processing failed: {str(e)}'
+                    }), 500
+
+            # Remove temporary uploaded file
+            if os.path.exists(temp_jd_path):
+                os.remove(temp_jd_path)
+
             jd_metadata = file_security.get_file_metadata(jd_final_path)
             results['job_description'] = {
-                'filename': jd_filename,
+                'filename': os.path.basename(jd_final_path),
                 'original_name': jd_file.filename,
                 'size': jd_metadata['size'],
                 'processed': False,
                 'pii_removed': False
             }
-            
+
         except Exception as e:
             # Clean up resume file if JD processing fails
             if results['resume'] and os.path.exists(resume_final_path):
