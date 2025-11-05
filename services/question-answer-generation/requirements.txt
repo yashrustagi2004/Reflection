@@ -11,3 +11,5 @@ pinecone-client==3.0.0
 
 # Embeddings
 sentence-transformers==2.2.2
+
+fastapi

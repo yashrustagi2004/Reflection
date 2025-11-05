@@ -18,12 +18,14 @@ from shared.service_client import ServiceClient
 from services.file_security_service import FileSecurityService
 from services.file_parser_service import FileParserService
 from services.enhanced_file_parser import EnhancedFileParser
-
+from flask import session
+import traceback, requests
 # Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this-in-production')
 CORS(app, origins=os.getenv('ALLOWED_ORIGINS', '*').split(','))
 
 # Configuration
@@ -380,6 +382,9 @@ def save_text_job_description():
 
 # ==================== Combined Upload ====================
 
+
+# (make sure `requests` is imported)
+
 @app.route('/api/upload/submit', methods=['POST'])
 def submit_resume_and_jd():
     """
@@ -390,7 +395,8 @@ def submit_resume_and_jd():
     2. Resume gets parsed and PII removed
     3. Job description saved as-is (no parsing)
     4. Both files stored locally
-    5. User sees success message
+    5. Resume & JD text sent to Q&A microservice
+    6. Q&A results stored in session for /practice
     """
     try:
         # Check if both files are provided
@@ -404,68 +410,38 @@ def submit_resume_and_jd():
         jd_file = request.files['job_description']
         user_id = 'anonymous'  # Temporary fix for authentication
         
-        # Track results
-        results = {
-            'resume': None,
-            'job_description': None
-        }
+        results = {'resume': None, 'job_description': None}
         
-        # Process Resume (with PII removal)
+        # ================== Resume Processing ==================
         try:
-            # Validate resume file
             is_valid, message, validation_details = file_security.validate_upload(resume_file)
             if not is_valid:
-                return jsonify({
-                    'success': False,
-                    'error': f'Resume validation failed: {message}',
-                    'details': validation_details
-                }), 400
+                return jsonify({'success': False, 'error': f'Resume validation failed: {message}'}), 400
             
-            # Generate secure filename for resume
             resume_filename = file_security.generate_secure_filename(
-                resume_file.filename,
-                user_id,
-                'resume'
+                resume_file.filename, user_id, 'resume'
             )
-            
-            # Save resume temporarily
             temp_resume_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes', f"temp_{resume_filename}")
             resume_file.save(temp_resume_path)
             
-            # Parse and clean resume
             is_valid, validation_message = EnhancedFileParser.validate_file_for_parsing(temp_resume_path)
             if not is_valid:
-                if os.path.exists(temp_resume_path):
-                    os.remove(temp_resume_path)
-                return jsonify({
-                    'success': False,
-                    'error': f'Resume parsing validation failed: {validation_message}'
-                }), 400
+                os.remove(temp_resume_path)
+                return jsonify({'success': False, 'error': f'Resume parsing validation failed: {validation_message}'}), 400
             
             cleaned_text = EnhancedFileParser.parse_file(temp_resume_path, remove_pii=True)
             if cleaned_text is None:
-                if os.path.exists(temp_resume_path):
-                    os.remove(temp_resume_path)
-                return jsonify({
-                    'success': False,
-                    'error': 'Failed to parse resume content'
-                }), 500
+                os.remove(temp_resume_path)
+                return jsonify({'success': False, 'error': 'Failed to parse resume content'}), 500
             
-            # Store parsed resume content in global variable
             global parsed_content_storage
             parsed_content_storage['resume_file_content'] = cleaned_text
-            print(f"[FILE PARSING] Combined upload - Resume content stored: {len(cleaned_text)} characters")
-            print(f"[FILE PARSING] Combined upload - Resume preview: {cleaned_text[:200]}...")
             
-            # Save cleaned resume
-            resume_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes', 
-                                           resume_filename.rsplit('.', 1)[0] + '_cleaned.txt')
+            resume_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes',
+                                             resume_filename.rsplit('.', 1)[0] + '_cleaned.txt')
             with open(resume_final_path, 'w', encoding='utf-8') as f:
                 f.write(cleaned_text)
-            
-            # Clean up temp file
-            if os.path.exists(temp_resume_path):
-                os.remove(temp_resume_path)
+            os.remove(temp_resume_path)
             
             resume_metadata = file_security.get_file_metadata(resume_final_path)
             results['resume'] = {
@@ -475,91 +451,43 @@ def submit_resume_and_jd():
                 'processed': True,
                 'pii_removed': True
             }
-            
         except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Resume processing failed: {str(e)}'
-            }), 500
+            return jsonify({'success': False, 'error': f'Resume processing failed: {str(e)}'}), 500
         
-        # Process Job Description — always save as .txt (parse when possible)
+        # ================== Job Description Processing ==================
         try:
-            # Validate JD file
             is_valid, message, validation_details = file_security.validate_upload(jd_file)
             if not is_valid:
-                # Clean up resume file if JD validation fails
                 if results['resume'] and os.path.exists(resume_final_path):
                     os.remove(resume_final_path)
-                return jsonify({
-                    'success': False,
-                    'error': f'Job description validation failed: {message}',
-                    'details': validation_details
-                }), 400
+                return jsonify({'success': False, 'error': f'Job description validation failed: {message}'}), 400
 
-            # Generate secure filename for JD (used as a base for the txt file)
-            jd_filename = file_security.generate_secure_filename(
-                jd_file.filename,
-                user_id,
-                'job_description'
-            )
-
-            # Save original upload to a temporary file, then produce a .txt file
+            jd_filename = file_security.generate_secure_filename(jd_file.filename, user_id, 'job_description')
             temp_jd_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', f"temp_{jd_filename}")
             jd_file.save(temp_jd_path)
 
-            # Try to parse the uploaded file to extract text
             jd_text_content = None
             try:
                 jd_text_content = EnhancedFileParser.parse_file(temp_jd_path, remove_pii=False)
             except Exception as e:
                 print(f"Warning: Failed to parse job description for storage: {e}")
 
-            # Final text filename (force .txt)
             final_txt_filename = jd_filename.rsplit('.', 1)[0] + '.txt'
             jd_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', final_txt_filename)
 
-            # If parsing succeeded, write parsed text; otherwise try to decode raw bytes as a fallback
             if jd_text_content:
                 with open(jd_final_path, 'w', encoding='utf-8') as f:
                     f.write(jd_text_content)
-                # Store parsed JD content in global variable
                 parsed_content_storage['jd_file_content'] = jd_text_content
-                print(f"[FILE PARSING] Combined upload - JD content stored: {len(jd_text_content)} characters")
-                print(f"[FILE PARSING] Combined upload - JD preview: {jd_text_content[:200]}...")
             else:
-                # Fallback: attempt to decode the uploaded file bytes to text
-                try:
-                    with open(temp_jd_path, 'rb') as rb:
-                        raw = rb.read()
+                with open(temp_jd_path, 'rb') as rb:
+                    raw = rb.read()
+                decoded = raw.decode('utf-8', errors='replace')
+                with open(jd_final_path, 'w', encoding='utf-8') as f:
+                    f.write(decoded)
+                jd_text_content = decoded
 
-                    decoded = None
-                    for enc in ('utf-8', 'latin-1', 'cp1252'):
-                        try:
-                            decoded = raw.decode(enc)
-                            break
-                        except Exception:
-                            continue
-                    if decoded is None:
-                        # As a final fallback, decode with errors replaced
-                        decoded = raw.decode('utf-8', errors='replace')
-
-                    with open(jd_final_path, 'w', encoding='utf-8') as f:
-                        f.write(decoded)
-                    print(f"[FILE PARSING] Combined upload - JD saved by decoding raw bytes to text ({len(decoded)} characters)")
-                except Exception as e:
-                    # Clean up and report error (clean resume file if present)
-                    if os.path.exists(temp_jd_path):
-                        os.remove(temp_jd_path)
-                    if results['resume'] and os.path.exists(resume_final_path):
-                        os.remove(resume_final_path)
-                    return jsonify({
-                        'success': False,
-                        'error': f'Job description processing failed: {str(e)}'
-                    }), 500
-
-            # Remove temporary uploaded file
-            if os.path.exists(temp_jd_path):
-                os.remove(temp_jd_path)
+            os.remove(temp_jd_path)
 
             jd_metadata = file_security.get_file_metadata(jd_final_path)
             results['job_description'] = {
@@ -569,20 +497,13 @@ def submit_resume_and_jd():
                 'processed': False,
                 'pii_removed': False
             }
-
         except Exception as e:
-            # Clean up resume file if JD processing fails
             if results['resume'] and os.path.exists(resume_final_path):
                 os.remove(resume_final_path)
-            return jsonify({
-                'success': False,
-                'error': f'Job description processing failed: {str(e)}'
-            }), 500
+            return jsonify({'success': False, 'error': f'Job description processing failed: {str(e)}'}), 500
         
-        # Record uploads in login management service
+        # ================== Record Uploads in Login Management ==================
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
-        
-        # Record resume upload
         resume_upload_record = {
             'file_type': 'resume',
             'filename': results['resume']['filename'],
@@ -591,8 +512,6 @@ def submit_resume_and_jd():
             'file_size': results['resume']['size'],
             'mime_type': 'text/plain'
         }
-        
-        # Record JD upload
         jd_upload_record = {
             'file_type': 'job_description',
             'filename': results['job_description']['filename'],
@@ -601,37 +520,56 @@ def submit_resume_and_jd():
             'file_size': results['job_description']['size'],
             'mime_type': jd_metadata['mime_type']
         }
-        
-        # Send both records to login management
         try:
-            service_client.post(
-                'login-management',
-                '/api/users/uploads',
-                resume_upload_record,
-                user_token=token
-            )
-            
-            service_client.post(
-                'login-management',
-                '/api/users/uploads',
-                jd_upload_record,
-                user_token=token
-            )
+            service_client.post('login-management', '/api/users/uploads', resume_upload_record, user_token=token)
+            service_client.post('login-management', '/api/users/uploads', jd_upload_record, user_token=token)
         except Exception as e:
-            # Files are saved but couldn't record in login service
             print(f"Warning: Failed to record uploads in login service: {e}")
         
+        # ================== 🧠 NEW: Q&A Microservice Integration ==================
+        try:
+            resume_text = parsed_content_storage.get('resume_file_content', '')
+            jd_text = parsed_content_storage.get('jd_file_content', '')
+            
+            qa_payload = {
+                "resume_text": resume_text,
+                "jd_text": jd_text
+            }
+
+            qa_response = requests.post(
+                "http://127.0.0.1:5003/api/questions/generate",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
+                    "Content-Type": "application/json"
+                },
+                json=qa_payload
+            )
+
+            if qa_response.status_code != 200:
+                print(f"[Q&A SERVICE] Failed with status {qa_response.status_code}: {qa_response.text}")
+                return jsonify({"success": False, "message": "Q&A generation failed"}), 500
+
+            global qa_data 
+            qa_data = qa_response.json()
+            print(qa_data['questions'])
+          
+
+        except Exception as e:
+            print(f"❌ Error contacting Q&A microservice: {e}")
+            return jsonify({"success": False, "error": f"Q&A generation failed: {str(e)}"}), 500
+        
+        # ================== Final Success Response ==================
         return jsonify({
             'success': True,
-            'message': 'Files uploaded successfully! Resume processed with personal information removed. Job description saved as provided.',
-            'files': results
+            'message': 'Files uploaded successfully and Q&A generated!',
+            'files': results,
+            'redirect_url': '/practice'
         }), 200
-        
+
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Upload failed: {str(e)}'
-        }), 500
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Upload failed: {str(e)}'}), 500
+
 
 
 # ==================== File Parsing ====================
@@ -787,6 +725,11 @@ def get_content_status():
             'success': False,
             'error': f'Failed to get content status: {str(e)}'
         }), 500
+
+@app.route('/api/questions', methods=['GET'])
+def get_questions():
+    """Return generated QA data"""
+    return jsonify(qa_data)
 
 
 if __name__ == '__main__':

@@ -248,26 +248,49 @@ def dashboard():
 def practice():
     """Practice page for interview questions"""
     token = get_user_token()
-    
-    # Get user profile
+
+    # Get user profile (optional, keep as-is)
     user_response = service_client.get(
         'login-management',
         '/api/users/profile',
         user_token=token
     )
-    
-    # Get parsed content from file-parsing service
+
+    # Optional: keep parsed file content call
     content_response = service_client.get(
-        'file-parsing',
-        '/api/files/parsed-content',
+        'file-parsing', '/api/files/parsed-content',
         user_token=token
     )
-    
-    return render_template(
-        'practice.html',
-        user=user_response.get('user', {}),
-        parsed_content=content_response.get('parsed_content', {})
+       
+
+        # 🟢 Fetch QA data from file-parsing microservice
+    qa_response = service_client.get(
+        'file-parsing',
+        '/api/questions',   # <-- adjust this endpoint to match your file-parsing route
+        user_token=token
     )
+
+    if qa_response.get('success') is False:
+        print("Error fetching QA data:", qa_response.get('error'))
+        qa_data = []
+    else:
+        qa_data = qa_response.get('questions', [])
+        print("Fetched QA Data:", qa_data)
+
+    return render_template("practice.html", user=user_response, qa_data=qa_data)
+
+    # return render_template(
+    #     'practice.html',
+    #     user=user_response.get('user', {}),
+    #     parsed_content=content_response.get('parsed_content', {})
+    # )
+# @app.route("/api/qa/results", methods=["GET"])
+# def get_qa_results():
+#     from flask import session
+#     qa_data = session.get("qa_results")
+#     if not qa_data:
+#         return jsonify({"success": False, "message": "No Q&A results found"}), 404
+#     return jsonify(qa_data), 200
 
 
 @app.route('/question/<int:question_id>')
