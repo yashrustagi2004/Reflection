@@ -4,16 +4,16 @@ import json
 import traceback
 import re
 from typing import List, Dict, Optional
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec # type: ignore
 # from langchain_pinecone import PineconeVectorStore
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI # type: ignore
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings # type: ignore
 from dotenv import load_dotenv
 
 load_dotenv()
 
 try:
-    import pinecone
+    import pinecone # type: ignore
 except Exception:
     pinecone = None
 
