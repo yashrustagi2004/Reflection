@@ -4,7 +4,7 @@ Provides secure HTTP client for service-to-service calls
 """
 
 import os
-import requests
+import requests # type: ignore
 from typing import Optional, Dict, Any
 from .auth_middleware import AuthMiddleware
 
