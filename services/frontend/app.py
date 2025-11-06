@@ -117,6 +117,67 @@ def debug_session():
     })
 
 
+@app.route('/debug/service-token')
+@login_required
+def debug_service_token():
+    """Debug endpoint to see service token generation and request format (remove in production!)"""
+    from shared.auth_middleware import AuthMiddleware
+    import jwt
+    
+    user_token = get_user_token()
+    auth = AuthMiddleware()
+    
+    # Generate service token
+    service_token = auth.generate_service_token('frontend')
+    
+    # Decode tokens to show payload
+    try:
+        service_payload = jwt.decode(service_token, auth.jwt_secret, algorithms=[auth.jwt_algorithm])
+    except:
+        service_payload = "Unable to decode"
+    
+    try:
+        user_payload = jwt.decode(user_token, auth.jwt_secret, algorithms=[auth.jwt_algorithm]) if user_token else None
+    except:
+        user_payload = "Unable to decode"
+    
+    # Show what headers would be sent
+    headers = service_client._get_service_headers(user_token)
+    
+    # Example request format
+    example_request = {
+        'method': 'POST',
+        'url': 'http://localhost:5002/api/upload/submit',
+        'headers': headers,
+        'body': 'multipart/form-data with files'
+    }
+    
+    return jsonify({
+        'service_token': {
+            'raw_token': service_token,
+            'payload': service_payload,
+            'expiry_hours': 1,
+            'note': 'This token authenticates the frontend service to other microservices'
+        },
+        'user_token': {
+            'raw_token': user_token,
+            'payload': user_payload,
+            'expiry_hours': int(os.getenv('JWT_EXPIRY_HOURS', '24')),
+            'note': 'This token authenticates the user'
+        },
+        'request_headers': headers,
+        'example_request_to_file_parsing': example_request,
+        'how_it_works': {
+            'step_1': 'ServiceClient._get_service_headers() is called',
+            'step_2': 'AuthMiddleware.generate_service_token(service_name) creates X-Service-Token',
+            'step_3': 'User token (if exists) is added as Authorization: Bearer <token>',
+            'step_4': 'Headers are sent with every request to other microservices',
+            'step_5': 'Receiving service validates both tokens (if @auth_middleware.require_auth is used)'
+        },
+        'warning': 'This endpoint exposes sensitive tokens - remove in production!'
+    })
+
+
 @app.route('/login')
 def login():
     """Login page"""

@@ -62,6 +62,71 @@ def health_check():
     }), 200
 
 
+# ==================== Debug Endpoints ====================
+
+@app.route('/debug/request-headers', methods=['GET', 'POST'])
+def debug_request_headers():
+    """Debug endpoint to inspect incoming request headers and tokens (remove in production!)"""
+    import jwt
+    
+    # Get all headers
+    headers_dict = dict(request.headers)
+    
+    # Extract tokens
+    auth_header = request.headers.get('Authorization', '')
+    service_token = request.headers.get('X-Service-Token', '')
+    service_name = request.headers.get('X-Service-Name', '')
+    
+    # Try to decode tokens
+    user_token_payload = None
+    service_token_payload = None
+    
+    if auth_header.startswith('Bearer '):
+        user_token = auth_header.replace('Bearer ', '')
+        try:
+            user_token_payload = jwt.decode(
+                user_token, 
+                auth_middleware.jwt_secret, 
+                algorithms=[auth_middleware.jwt_algorithm]
+            )
+        except Exception as e:
+            user_token_payload = f"Decode error: {str(e)}"
+    
+    if service_token:
+        try:
+            service_token_payload = jwt.decode(
+                service_token,
+                auth_middleware.jwt_secret,
+                algorithms=[auth_middleware.jwt_algorithm]
+            )
+        except Exception as e:
+            service_token_payload = f"Decode error: {str(e)}"
+    
+    return jsonify({
+        'received_headers': headers_dict,
+        'extracted_tokens': {
+            'user_token': {
+                'header': auth_header,
+                'raw_token': auth_header.replace('Bearer ', '') if auth_header else None,
+                'decoded_payload': user_token_payload
+            },
+            'service_token': {
+                'header': service_token,
+                'decoded_payload': service_token_payload,
+                'service_name': service_name
+            }
+        },
+        'request_info': {
+            'method': request.method,
+            'url': request.url,
+            'endpoint': request.endpoint,
+            'remote_addr': request.remote_addr
+        },
+        'note': 'This shows what file-parsing service receives from frontend',
+        'warning': 'This endpoint exposes sensitive tokens - remove in production!'
+    }), 200
+
+
 # ==================== File Upload ====================
 
 @app.route('/api/files/upload/resume', methods=['POST'])

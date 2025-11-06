@@ -1,25 +1,12 @@
-#!/bin/bash
-# 
-# Quick test script using curl commands
-# Tests the parsed content API endpoints
-#
+curl http://localhost:5002/debug/request-headers
 
-# Base URL
-BASE_URL="http://localhost:5002"
+curl http://localhost:5000/debug/service-token \
+  -H "Cookie: session=<your-session-cookie>"
 
-echo ""
-echo "Testing service health..."
-curl -s "$BASE_URL/health" | python3 -m json.tool
-echo ""
+curl http://localhost:5002/debug/request-headers \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "X-Service-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "X-Service-Name: frontend"
 
-echo "Checking content status..."
-curl -s "$BASE_URL/api/files/content-status" | python3 -m json.tool
-echo ""
 
-echo "Getting parsed content (main test)..."
-echo "This is the equivalent of the Python code:"
-echo "response = requests.get('http://localhost:5002/api/files/parsed-content')"
-echo ""
-
-RESPONSE=$(curl -s "$BASE_URL/api/files/parsed-content")
-echo "$RESPONSE" | python3 -m json.tool
+  
