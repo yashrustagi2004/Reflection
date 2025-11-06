@@ -306,6 +306,68 @@ def question_detail(question_id):
     )
 
 
+@app.route('/api/practice/analyze-answer', methods=['POST'])
+@login_required
+def analyze_answer():
+    """
+    Analyze user's answer to an interview question.
+    Forwards the request to question-answer-generation service.
+    """
+    try:
+        token = get_user_token()
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        # Validate required fields
+        question = data.get('question', '').strip()
+        user_answer = data.get('user_answer', '').strip()
+        
+        if not question or not user_answer:
+            return jsonify({
+                'success': False,
+                'error': 'Question and user_answer are required'
+            }), 400
+        
+        # Prepare data for QA service
+        analysis_data = {
+            'question': question,
+            'user_answer': user_answer,
+            'category': data.get('category', 'General'),
+            'difficulty': data.get('difficulty', 'Medium')
+        }
+        
+        # Forward to question-answer-generation service
+        response = service_client.post(
+            'question-answer-generation',
+            '/api/answers/analyze',
+            analysis_data,
+            user_token=token
+        )
+        
+        if response.get('success'):
+            return jsonify({
+                'success': True,
+                'analysis': response.get('analysis', {}),
+                'message': 'Answer analyzed successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': response.get('error', 'Analysis failed')
+            }), 500
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to analyze answer: {str(e)}'
+        }), 500
+
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -881,120 +943,6 @@ def generate_questions():
             'success': False,
             'error': f'Question generation failed: {str(e)}'
         }), 500
-
-
-@app.route('/api/practice/analyze-answer', methods=['POST'])
-@login_required
-def analyze_answer():
-    """Analyze user's answer to a question"""
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': 'No data provided'
-            }), 400
-        
-        question = data.get('question', '')
-        user_answer = data.get('userAnswer', '')
-        ideal_answer = data.get('idealAnswer', '')
-        
-        if not question or not user_answer:
-            return jsonify({
-                'success': False,
-                'error': 'Question and user answer are required'
-            }), 400
-        
-        # Call answer-analysis service
-        analysis_data = {
-            'question': question,
-            'user_answer': user_answer,
-            'ideal_answer': ideal_answer
-        }
-        
-        analysis_response = service_client.post(
-            'answer-analysis',
-            '/api/analysis/analyze',
-            analysis_data
-        )
-        
-        if analysis_response and analysis_response.get('success'):
-            return jsonify({
-                'success': True,
-                'analysis': analysis_response.get('analysis', {}),
-                'message': 'Answer analyzed successfully'
-            }), 200
-        else:
-            # Fallback to local analysis
-            analysis = perform_local_analysis(user_answer, ideal_answer)
-            return jsonify({
-                'success': True,
-                'analysis': analysis,
-                'message': 'Answer analyzed (local fallback)'
-            }), 200
-            
-    except Exception as e:
-        # Fallback to local analysis
-        try:
-            data = request.get_json()
-            user_answer = data.get('userAnswer', '')
-            ideal_answer = data.get('idealAnswer', '')
-            analysis = perform_local_analysis(user_answer, ideal_answer)
-            return jsonify({
-                'success': True,
-                'analysis': analysis,
-                'message': 'Answer analyzed (local fallback)'
-            }), 200
-        except Exception as fallback_error:
-            return jsonify({
-                'success': False,
-                'error': f'Analysis failed: {str(fallback_error)}'
-            }), 500
-
-
-def perform_local_analysis(user_answer, ideal_answer):
-    """Perform local analysis when backend is unavailable"""
-    user_answer_lower = user_answer.lower()
-    ideal_answer_lower = ideal_answer.lower()
-    
-    score = 0
-    feedback = []
-    
-    # Check for key concepts
-    key_words = ideal_answer_lower.split()
-    key_words = [word for word in key_words if len(word) > 4]
-    matched_words = [word for word in key_words if word in user_answer_lower]
-    
-    if matched_words:
-        score += 2
-        feedback.append('✓ Good use of technical terms')
-    
-    # Check answer length
-    if len(user_answer) > 50:
-        score += 1
-        feedback.append('✓ Detailed explanation')
-    else:
-        feedback.append('⚠ Could be more detailed')
-    
-    # Check for examples
-    if any(word in user_answer_lower for word in ['example', 'like', 'such as', 'for instance']):
-        score += 1
-        feedback.append('✓ Good use of examples')
-    
-    # Overall assessment
-    if score >= 3:
-        overall = 'Excellent'
-    elif score >= 2:
-        overall = 'Good'
-    else:
-        overall = 'Needs improvement'
-    
-    return {
-        'score': score,
-        'feedback': feedback,
-        'overall': overall
-    }
 
 
 if __name__ == '__main__':
