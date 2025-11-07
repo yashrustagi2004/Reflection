@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Us - Reflection</title>
     <style>
+        /* ============================================
+           GLOBAL STYLES & RESET
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Body styling with consistent gradient background */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
@@ -74,36 +78,57 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 40px auto;
-            padding: 50px 40px;
+            padding: 60px 50px;
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
             border-radius: 25px;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
-            animation: fadeIn 1s ease-in-out;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: fadeInUp 0.8s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
 
         h1 {
-            color: #6B46C1;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
             text-align: center;
             font-size: 2.8rem;
+            font-weight: 700;
         }
 
         h2 {
-            color: #7C3AED;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #7C3AED 0%, #4C9FE8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 40px;
+            margin-bottom: 20px;
             font-size: 1.8rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(107, 70, 193, 0.2);
         }
 
         p {
             margin-bottom: 20px;
             font-size: 1.1rem;
+            color: #555;
+            line-height: 1.8;
         }
 
         ul {
@@ -119,6 +144,17 @@
             display: flex;
             align-items: flex-start;
             gap: 15px;
+            padding: 15px;
+            background: rgba(107, 70, 193, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid #6B46C1;
+            transition: all 0.3s ease;
+        }
+
+        li:hover {
+            background: rgba(107, 70, 193, 0.1);
+            transform: translateX(5px);
+            border-left-color: #8B5CF6;
         }
 
         li svg {
@@ -128,21 +164,16 @@
             fill: #7C3AED;
             margin-top: 3px;
         }
-
-        li:hover {
-            color: #4C9FE8;
-            transition: 0.3s;
-        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <a href="/about" class="nav-btn active-page">About Us</a>
-        <a href="/testimonials" class="nav-btn">Testimonials</a>
-        <a href="/privacy" class="nav-btn">Privacy Policy</a>
-        <a href="/contact" class="nav-btn">Contact Us</a>
-        <a href="/login" class="nav-btn">Login</a>
+        <a href="{{ url_for('about') }}" class="nav-btn active-page">About Us</a>
+        <a href="{{ url_for('testimonials') }}" class="nav-btn">Testimonials</a>
+        <a href="{{ url_for('privacy') }}" class="nav-btn">Privacy Policy</a>
+        <a href="{{ url_for('contact') }}" class="nav-btn">Contact Us</a>
+        <a href="{{ url_for('login') }}" class="nav-btn">Login</a>
     </nav>
 
     <!-- Page Content -->
