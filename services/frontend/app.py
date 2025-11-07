@@ -464,6 +464,22 @@ def profile():
     return render_template('profile.html', user=response.get('user', {}), updated=request.args.get('updated'))
 
 
+@app.route('/resources')
+@login_required
+def resources():
+    """Resources page for courses, videos, and certificates"""
+    token = get_user_token()
+    
+    # Get user profile (optional)
+    user_response = service_client.get(
+        'login-management',
+        '/api/users/profile',
+        user_token=token
+    )
+    
+    return render_template('resources.html', user=user_response.get('user', {}))
+
+
 @app.route('/delete-account', methods=['GET'])
 @login_required
 def delete_account_page():
