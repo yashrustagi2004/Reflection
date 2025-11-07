@@ -6,12 +6,16 @@
     <title>Question Detail - AI Interview Platform</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
     <style>
+        /* ============================================
+           GLOBAL STYLES & RESET
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Body styling with consistent gradient background */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -152,6 +156,7 @@
             letter-spacing: -0.5px;
         }
 
+        /* Content grid layout - responsive two-column for question and answer */
         .content-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -159,11 +164,12 @@
             margin-bottom: 30px;
         }
 
+        /* Full-width grid for analysis section */
         .content-grid.full {
             grid-template-columns: 1fr;
         }
 
-        /* Card Styles */
+        /* Card Styles with fade-in animation */
         .card {
             background: white;
             border-radius: 16px;
@@ -171,10 +177,24 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
         }
 
+        /* Card hover effect */
         .card:hover {
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Fade-in animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .card-header {
@@ -250,9 +270,10 @@
             display: block;
         }
 
+        /* Answer textarea - standard height for side-by-side layout */
         .answer-textarea {
             width: 100%;
-            min-height: 200px;
+            min-height: 300px;
             padding: 18px;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -318,9 +339,9 @@
             transform: none;
         }
 
-        /* Analysis Section */
+        /* Analysis Section - full width below question */
         .analysis-container {
-            min-height: 150px;
+            min-height: 200px;
         }
 
         .analysis-placeholder {
@@ -463,24 +484,61 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Feedback Messages */
+        /* Feedback Messages with fade-in animation */
         .feedback-message {
             padding: 14px 20px;
             border-radius: 10px;
             margin-top: 16px;
             font-size: 14px;
             font-weight: 500;
-            animation: slideDown 0.3s ease;
+            animation: slideDown 0.4s ease-out;
         }
 
+        /* Slide down animation for messages */
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-15px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        /* Fade-in animation for analysis results */
+        .analysis-results {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Fade-in for feedback items */
+        .feedback-item {
+            animation: fadeInSlide 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .feedback-item:nth-child(1) { animation-delay: 0.1s; }
+        .feedback-item:nth-child(2) { animation-delay: 0.2s; }
+        .feedback-item:nth-child(3) { animation-delay: 0.3s; }
+        .feedback-item:nth-child(n+4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
 
@@ -627,7 +685,7 @@
             <div class="content-wrapper">
                 <h1 class="page-title">Interview Question Practice</h1>
                 
-                <!-- Question and Answer Grid -->
+                <!-- Question and Answer Grid (Top Row) -->
                 <div class="content-grid">
                     <!-- Question Card -->
                     <div class="card">
@@ -647,7 +705,7 @@
                         </div>
                     </div>
                     
-                    <!-- Answer Input Card -->
+                    <!-- Answer Input Card (Next to Question) -->
                     <div class="card">
                         <div class="card-header">Your Answer</div>
                         <div class="card-body">
@@ -670,7 +728,7 @@
                     </div>
                 </div>
                 
-                <!-- Analysis Card (Full Width) -->
+                <!-- Analysis Card (Below Question, Full Width) -->
                 <div class="content-grid full">
                     <div class="card">
                         <div class="card-header">AI-Powered Analysis & Feedback</div>
