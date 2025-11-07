@@ -590,94 +590,50 @@ def submit_resume_and_jd():
             service_client.post('login-management', '/api/users/uploads', jd_upload_record, user_token=token)
         except Exception as e:
             print(f"Warning: Failed to record uploads in login service: {e}")
-
-        # ================== Final Response ==================
-        return jsonify({
-            'success': True,
-            'message': 'Resume and job description processed successfully',
-            'results': results
-        }), 200
-
-    except Exception as e:
-        # Outer exception handling for safety
-        return jsonify({
-            'success': False,
-            'error': f'Unexpected server error: {str(e)}'
-        }), 500
-
-    
-
-        # ================== Pinecone Integration ==================
         
-@app.route('/api/files/upload', methods=['POST'])
-def upload_files():
-    try:
-        from services.pinecone_service import PineconeService
-        from pymongo import MongoClient
+        # ================== 🧠 NEW: Q&A Microservice Integration ==================
+        try:
+            resume_text = parsed_content_storage.get('resume_file_content', '')
+            jd_text = parsed_content_storage.get('jd_file_content', '')
+            
+            qa_payload = {
+                "resume_text": resume_text,
+                "jd_text": jd_text
+            }
 
-        # Initialize Pinecone
-        pinecone_service = PineconeService()
+            qa_response = requests.post(
+                "http://127.0.0.1:5003/api/questions/generate",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
+                    "Content-Type": "application/json"
+                },
+                json=qa_payload
+            )
 
-        # ================== 1️⃣ Fetch user_id from MongoDB ==================
-        mongo_client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
-        db = mongo_client["reflection_db"]        # your database name
-        users_collection = db["users"]            # your users collection
+            if qa_response.status_code != 200:
+                print(f"[Q&A SERVICE] Failed with status {qa_response.status_code}: {qa_response.text}")
+                return jsonify({"success": False, "message": "Q&A generation failed"}), 500
 
-        # Example: Fetching based on email or session (modify as per your logic)
-        user_email = parsed_content_storage.get("user_email", None)
-        user_doc = users_collection.find_one({"email": user_email})
-        user_id = str(user_doc["_id"]) if user_doc else "anonymous_user"
+            global qa_data 
+            qa_data = qa_response.json()
+            print(qa_data['questions'])
+          
 
-        # ================== 2️⃣ Get parsed content ==================
-        resume_text = parsed_content_storage.get('resume_file_content', '')
-        jd_text = parsed_content_storage.get('jd_file_content', '')
-
-        # ================== 3️⃣ Store parsed data into Pinecone with user_id ==================
-        pinecone_service.store_parsed_data(resume_text, jd_text, user_id=user_id)
-
-        # ================== 4️⃣ Retrieve stored data back (optional) ==================
-        stored_data = pinecone_service.fetch_parsed_data(user_id=user_id)
-        print(f"✅ Retrieved from Pinecone for user {user_id}: {stored_data}")
-
-        # ================== 5️⃣ Send stored text to Q&A service ==================
-        qa_payload = {
-            "resume_text": resume_text,
-            "job_description_text": jd_text,
-            "user_id": user_id
-        }
-
-        qa_response = requests.post(
-            "http://127.0.0.1:5003/api/questions/generate",
-            headers={
-                "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
-                "Content-Type": "application/json"
-            },
-            json=qa_payload
-        )
-
-        if qa_response.status_code != 200:
-            print(f"[Q&A SERVICE] Failed: {qa_response.status_code} {qa_response.text}")
-            return jsonify({"success": False, "message": "Q&A generation failed"}), 500
-
-        global qa_data
-        qa_data = qa_response.json()
-        print(qa_data['questions'])
-
-        # ================== ✅ Final Success Response ==================
+        except Exception as e:
+            print(f"❌ Error contacting Q&A microservice: {e}")
+            return jsonify({"success": False, "error": f"Q&A generation failed: {str(e)}"}), 500
+        
+        # ================== Final Success Response ==================
         return jsonify({
             'success': True,
-            'message': f'Files uploaded successfully, data stored in Pinecone for user {user_id}, and Q&A generated!',
+            'message': 'Files uploaded successfully and Q&A generated!',
             'files': results,
-            'user_id': user_id,
             'redirect_url': '/practice'
         }), 200
 
     except Exception as e:
-        print(f"❌ Error in Pinecone or Q&A integration: {e}")
-        return jsonify({
-            "success": False,
-            "error": f"Integration failed: {str(e)}"
-        }), 500
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Upload failed: {str(e)}'}), 500
 
 
 
