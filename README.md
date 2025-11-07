@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![Architecture](https://img.shields.io/badge/architecture-microservices-green)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 
@@ -26,6 +26,21 @@ Reflection is an AI-powered interview preparation platform that helps job seeker
 - 💡 **Intelligent Feedback** - Real-time answer analysis and improvement suggestions
 - 🎯 **Personalized Practice** - Context-aware questions based on your resume and target role
 - 📊 **Progress Tracking** - Monitor your interview preparation journey
+- 🔍 **Vector Embeddings** - Semantic storage using Pinecone for intelligent retrieval
+- 💾 **User-Specific Data** - Questions persist and are isolated per user in MongoDB
+
+---
+
+## 🆕 What's New in v2.1.0
+
+### Pinecone & MongoDB Integration
+
+✨ **User-Specific Questions**: Questions are now saved per user and persist across sessions  
+✨ **Vector Embeddings**: Resume and JD stored as embeddings in Pinecone  
+✨ **Better Security**: Enhanced user data isolation and authentication  
+✨ **Persistent Storage**: MongoDB stores user-specific questions  
+
+📖 **See**: [`QUICKSTART.md`](QUICKSTART.md) for setup instructions
 
 ---
 
@@ -35,10 +50,16 @@ Reflection is an AI-powered interview preparation platform that helps job seeker
 |---------|---------|------------|
 | **Frontend** | User interface & orchestration | Flask, Jinja2 |
 | **Login Management** | Authentication & user data | Flask, MongoDB, OAuth |
-| **File Parsing** | Secure upload & document parsing | Flask, PyPDF2, python-magic |
-| **Q&A Generation** | Interview question generation | Flask, LangChain, Gemini |
-| **Answer Analysis** | Answer evaluation & feedback | Flask, LangChain, Gemini |
-| **Resources** | Vector storage & retrieval | Flask, Pinecone |
+| **File Parsing** | Secure upload, parsing & embeddings | Flask, PyPDF2, Pinecone, sentence-transformers |
+| **Question Generation & Answer Analysis** | Interview question generation & storage | Flask, LangChain, Gemini, MongoDB |
+| **Resources** | storage & retrieval | Flask, MongoDB |
+
+---
+
+## 📚 Documentation
+
+- **[docs/DEBUG_ENDPOINTS.md](docs/DEBUG_ENDPOINTS.md)** - API debugging guide
+- **[docs/api/](docs/api/)** - API documentation
 
 ---
 
@@ -46,8 +67,9 @@ Reflection is an AI-powered interview preparation platform that helps job seeker
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.13.4
 - MongoDB
+- Pinecone account (free tier available)
 - Git
 
 ### Installation (5 minutes)
@@ -190,8 +212,7 @@ pytest services/file-parsing/tests
 | Frontend | http://localhost:5000/health | 5000 |
 | Login Management | http://localhost:5001/health | 5001 |
 | File Parsing | http://localhost:5002/health | 5002 |
-| Q&A Generation | http://localhost:5003/health | 5003 |
-| Answer Analysis | http://localhost:5004/health | 5004 |
+| Question Generation and Answer Analysis | http://localhost:5003/health | 5003 |
 | Resources | http://localhost:5005/health | 5005 |
 
 ---
@@ -267,11 +288,5 @@ Contributions are welcome! Please follow these steps:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
-
-- 📖 Docs: [Documentation](/docs/api/)
 
 ---
