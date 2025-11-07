@@ -18,8 +18,9 @@ from shared.service_client import ServiceClient
 from services.file_security_service import FileSecurityService
 from services.file_parser_service import FileParserService
 from services.enhanced_file_parser import EnhancedFileParser
+from services.pinecone_service import get_pinecone_service
 from flask import session
-import traceback, requests
+import traceback, requests, time
 # Load environment variables
 load_dotenv()
 
@@ -42,7 +43,17 @@ service_client = ServiceClient('file-parsing')
 file_security = FileSecurityService()
 file_parser = FileParserService()
 
-# Global storage for parsed content
+# Initialize Pinecone service (lazy loading to handle missing env vars gracefully)
+pinecone_service = None
+try:
+    pinecone_service = get_pinecone_service()
+    print("[FILE PARSING] ✅ Pinecone service initialized")
+except Exception as e:
+    print(f"[FILE PARSING] ⚠️ Pinecone service not available: {e}")
+    print("[FILE PARSING] Will fall back to local storage if needed")
+
+# Deprecated: Global storage for parsed content - now using Pinecone
+# Keep for backward compatibility with existing endpoints
 parsed_content_storage = {
     'resume_file_content': None,
     'jd_file_content': None,
@@ -458,10 +469,10 @@ def submit_resume_and_jd():
     Flow:
     1. User submits both resume and JD files
     2. Resume gets parsed and PII removed
-    3. Job description saved as-is (no parsing)
-    4. Both files stored locally
-    5. Resume & JD text sent to Q&A microservice
-    6. Q&A results stored in session for /practice
+    3. Job description parsed (no PII removal)
+    4. Embeddings generated and stored in Pinecone (no local storage)
+    5. Text and embedding IDs sent to Q&A microservice
+    6. Q&A service generates questions and saves to MongoDB with user association
     """
     try:
         # Check if both files are provided
@@ -473,11 +484,29 @@ def submit_resume_and_jd():
         
         resume_file = request.files['resume']
         jd_file = request.files['job_description']
-        user_id = 'anonymous'  # Temporary fix for authentication
+        
+        # Extract user_id from JWT token
+        user_id = 'anonymous'  # Default fallback
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        
+        if token:
+            try:
+                payload = auth_middleware.verify_token(token)
+                if payload and 'user_id' in payload:
+                    user_id = payload['user_id']
+                    print(f"[FILE PARSING] Authenticated user: {user_id}")
+                else:
+                    print("[FILE PARSING] ⚠️ Token valid but no user_id, using anonymous")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Token verification failed: {e}, using anonymous")
+        else:
+            print("[FILE PARSING] ⚠️ No token provided, using anonymous")
         
         results = {'resume': None, 'job_description': None}
+        timestamp = int(time.time())
         
         # ================== Resume Processing ==================
+        resume_text = None
         try:
             is_valid, message, validation_details = file_security.validate_upload(resume_file)
             if not is_valid:
@@ -494,111 +523,145 @@ def submit_resume_and_jd():
                 os.remove(temp_resume_path)
                 return jsonify({'success': False, 'error': f'Resume parsing validation failed: {validation_message}'}), 400
             
+            # Parse and remove PII
             cleaned_text = EnhancedFileParser.parse_file(temp_resume_path, remove_pii=True)
             if cleaned_text is None:
                 os.remove(temp_resume_path)
                 return jsonify({'success': False, 'error': 'Failed to parse resume content'}), 500
             
-            global parsed_content_storage
-            parsed_content_storage['resume_file_content'] = cleaned_text
+            resume_text = cleaned_text
             
-            resume_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes',
-                                             resume_filename.rsplit('.', 1)[0] + '_cleaned.txt')
-            with open(resume_final_path, 'w', encoding='utf-8') as f:
-                f.write(cleaned_text)
+            # Clean up temp file
             os.remove(temp_resume_path)
             
-            resume_metadata = file_security.get_file_metadata(resume_final_path)
+            # Set metadata for response
             results['resume'] = {
-                'filename': os.path.basename(resume_final_path),
+                'filename': resume_filename.rsplit('.', 1)[0] + '_cleaned.txt',
                 'original_name': resume_file.filename,
-                'size': resume_metadata['size'],
+                'size': len(cleaned_text),
                 'processed': True,
                 'pii_removed': True
             }
+            
+            print(f"[FILE PARSING] ✅ Resume parsed: {len(cleaned_text)} characters")
+            
         except Exception as e:
+            print(f"[FILE PARSING] ❌ Resume processing error: {e}")
+            traceback.print_exc()
             return jsonify({'success': False, 'error': f'Resume processing failed: {str(e)}'}), 500
         
         # ================== Job Description Processing ==================
+        jd_text = None
         try:
             is_valid, message, validation_details = file_security.validate_upload(jd_file)
             if not is_valid:
-                if results['resume'] and os.path.exists(resume_final_path):
-                    os.remove(resume_final_path)
                 return jsonify({'success': False, 'error': f'Job description validation failed: {message}'}), 400
 
             jd_filename = file_security.generate_secure_filename(jd_file.filename, user_id, 'job_description')
             temp_jd_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', f"temp_{jd_filename}")
             jd_file.save(temp_jd_path)
 
-            jd_text_content = None
-            try:
-                jd_text_content = EnhancedFileParser.parse_file(temp_jd_path, remove_pii=False)
-            except Exception as e:
-                print(f"Warning: Failed to parse job description for storage: {e}")
-
-            final_txt_filename = jd_filename.rsplit('.', 1)[0] + '.txt'
-            jd_final_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', final_txt_filename)
-
-            if jd_text_content:
-                with open(jd_final_path, 'w', encoding='utf-8') as f:
-                    f.write(jd_text_content)
-                parsed_content_storage['jd_file_content'] = jd_text_content
-            else:
+            # Parse JD (no PII removal)
+            jd_text_content = EnhancedFileParser.parse_file(temp_jd_path, remove_pii=False)
+            
+            if not jd_text_content:
+                # Fallback to raw text if parsing fails
                 with open(temp_jd_path, 'rb') as rb:
                     raw = rb.read()
-                decoded = raw.decode('utf-8', errors='replace')
-                with open(jd_final_path, 'w', encoding='utf-8') as f:
-                    f.write(decoded)
-                jd_text_content = decoded
-
+                jd_text_content = raw.decode('utf-8', errors='replace')
+            
+            jd_text = jd_text_content
+            
+            # Clean up temp file
             os.remove(temp_jd_path)
 
-            jd_metadata = file_security.get_file_metadata(jd_final_path)
+            # Set metadata for response
             results['job_description'] = {
-                'filename': os.path.basename(jd_final_path),
+                'filename': jd_filename.rsplit('.', 1)[0] + '.txt',
                 'original_name': jd_file.filename,
-                'size': jd_metadata['size'],
-                'processed': False,
+                'size': len(jd_text_content),
+                'processed': True,
                 'pii_removed': False
             }
+            
+            print(f"[FILE PARSING] ✅ JD parsed: {len(jd_text_content)} characters")
+            
         except Exception as e:
-            if results['resume'] and os.path.exists(resume_final_path):
-                os.remove(resume_final_path)
+            print(f"[FILE PARSING] ❌ JD processing error: {e}")
+            traceback.print_exc()
             return jsonify({'success': False, 'error': f'Job description processing failed: {str(e)}'}), 500
         
+        # ================== Store Embeddings in Pinecone ==================
+        resume_embedding_id = None
+        jd_embedding_id = None
+        
+        if pinecone_service and resume_text and jd_text:
+            try:
+                # Replace old embeddings with new ones (one resume + one JD per user)
+                resume_embedding_id, jd_embedding_id = pinecone_service.replace_user_documents(
+                    user_id=user_id,
+                    resume_text=resume_text,
+                    jd_text=jd_text,
+                    timestamp=timestamp,
+                    resume_metadata={
+                        'original_filename': resume_file.filename,
+                        'processed': True,
+                        'pii_removed': True
+                    },
+                    jd_metadata={
+                        'original_filename': jd_file.filename,
+                        'processed': True,
+                        'pii_removed': False
+                    }
+                )
+                
+                if resume_embedding_id and jd_embedding_id:
+                    print(f"[FILE PARSING] ✅ Documents replaced for user {user_id}")
+                    print(f"[FILE PARSING]    Resume ID: {resume_embedding_id}")
+                    print(f"[FILE PARSING]    JD ID: {jd_embedding_id}")
+                else:
+                    print(f"[FILE PARSING] ⚠️ Failed to store embeddings in Pinecone")
+                
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Pinecone storage failed: {e}")
+                traceback.print_exc()
+                # Continue without failing the request
+                # We'll still send text to QA service
+        else:
+            if not pinecone_service:
+                print("[FILE PARSING] ⚠️ Pinecone service not available, skipping embedding storage")
+        
         # ================== Record Uploads in Login Management ==================
-        token = request.headers.get('Authorization', '').replace('Bearer ', '')
         resume_upload_record = {
             'file_type': 'resume',
             'filename': results['resume']['filename'],
             'original_name': results['resume']['original_name'],
-            'file_path': resume_final_path,
             'file_size': results['resume']['size'],
-            'mime_type': 'text/plain'
+            'mime_type': 'text/plain',
+            'pinecone_id': resume_embedding_id
         }
         jd_upload_record = {
             'file_type': 'job_description',
             'filename': results['job_description']['filename'],
             'original_name': results['job_description']['original_name'],
-            'file_path': jd_final_path,
             'file_size': results['job_description']['size'],
-            'mime_type': jd_metadata['mime_type']
+            'mime_type': 'text/plain',
+            'pinecone_id': jd_embedding_id
         }
         try:
             service_client.post('login-management', '/api/users/uploads', resume_upload_record, user_token=token)
             service_client.post('login-management', '/api/users/uploads', jd_upload_record, user_token=token)
         except Exception as e:
-            print(f"Warning: Failed to record uploads in login service: {e}")
+            print(f"[FILE PARSING] ⚠️ Failed to record uploads in login service: {e}")
         
-        # ================== 🧠 NEW: Q&A Microservice Integration ==================
+        # ================== Send to Q&A Microservice for Question Generation ==================
         try:
-            resume_text = parsed_content_storage.get('resume_file_content', '')
-            jd_text = parsed_content_storage.get('jd_file_content', '')
-            
             qa_payload = {
+                "user_id": user_id,
                 "resume_text": resume_text,
-                "jd_text": jd_text
+                "jd_text": jd_text,
+                "resume_embedding_id": resume_embedding_id,
+                "jd_embedding_id": jd_embedding_id
             }
 
             qa_response = requests.post(
@@ -607,31 +670,43 @@ def submit_resume_and_jd():
                     "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
                     "Content-Type": "application/json"
                 },
-                json=qa_payload
+                json=qa_payload,
+                timeout=30
             )
 
             if qa_response.status_code != 200:
-                print(f"[Q&A SERVICE] Failed with status {qa_response.status_code}: {qa_response.text}")
-                return jsonify({"success": False, "message": "Q&A generation failed"}), 500
-
-            global qa_data 
-            qa_data = qa_response.json()
-            print(qa_data['questions'])
-          
+                print(f"[FILE PARSING] ⚠️ Q&A service failed with status {qa_response.status_code}: {qa_response.text}")
+                return jsonify({
+                    "success": False, 
+                    "message": "File processing succeeded but Q&A generation failed"
+                }), 500
+            
+            qa_result = qa_response.json()
+            print(f"[FILE PARSING] ✅ Q&A generation successful for user {user_id}")
 
         except Exception as e:
-            print(f"❌ Error contacting Q&A microservice: {e}")
-            return jsonify({"success": False, "error": f"Q&A generation failed: {str(e)}"}), 500
+            print(f"[FILE PARSING] ❌ Error contacting Q&A microservice: {e}")
+            traceback.print_exc()
+            return jsonify({
+                "success": False, 
+                "error": f"File processing succeeded but Q&A generation failed: {str(e)}"
+            }), 500
         
         # ================== Final Success Response ==================
         return jsonify({
             'success': True,
-            'message': 'Files uploaded successfully and Q&A generated!',
+            'message': 'Files uploaded successfully, embeddings stored, and questions generated!',
             'files': results,
+            'embeddings': {
+                'resume_id': resume_embedding_id,
+                'jd_id': jd_embedding_id
+            },
+            'user_id': user_id,
             'redirect_url': '/practice'
         }), 200
 
     except Exception as e:
+        print(f"[FILE PARSING] ❌ Upload failed: {e}")
         traceback.print_exc()
         return jsonify({'success': False, 'error': f'Upload failed: {str(e)}'}), 500
 
@@ -793,8 +868,86 @@ def get_content_status():
 
 @app.route('/api/questions', methods=['GET'])
 def get_questions():
-    """Return generated QA data"""
-    return jsonify(qa_data)
+    """
+    Get questions for the authenticated user from QA service.
+    Fetches user-specific questions from MongoDB.
+    """
+    try:
+        # Extract user_id from JWT token
+        user_id = 'anonymous'  # Default fallback
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        
+        if token:
+            try:
+                payload = auth_middleware.verify_token(token)
+                if payload and 'user_id' in payload:
+                    user_id = payload['user_id']
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Invalid token: user_id not found'
+                    }), 401
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Token verification failed: {str(e)}'
+                }), 401
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Authorization token required'
+            }), 401
+        
+        # Fetch questions from QA service
+        qa_service_url = f"http://127.0.0.1:5003/api/questions/user/{user_id}"
+        
+        qa_response = requests.get(
+            qa_service_url,
+            headers={
+                "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
+                "Content-Type": "application/json"
+            },
+            timeout=10
+        )
+        
+        if qa_response.status_code == 404:
+            return jsonify({
+                'success': False,
+                'error': 'No questions found',
+                'message': 'Please upload resume and job description first',
+                'questions': []
+            }), 404
+        
+        if qa_response.status_code != 200:
+            return jsonify({
+                'success': False,
+                'error': f'QA service error: {qa_response.status_code}',
+                'questions': []
+            }), 500
+        
+        qa_data = qa_response.json()
+        return jsonify(qa_data), 200
+        
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'QA service timeout',
+            'questions': []
+        }), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'success': False,
+            'error': 'QA service unavailable',
+            'questions': []
+        }), 503
+    except Exception as e:
+        print(f"[FILE PARSING] ❌ Error fetching questions: {e}")
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Failed to fetch questions: {str(e)}',
+            'questions': []
+        }), 500
 
 
 if __name__ == '__main__':
