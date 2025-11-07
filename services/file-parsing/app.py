@@ -636,6 +636,7 @@ def submit_resume_and_jd():
             'file_type': 'resume',
             'filename': results['resume']['filename'],
             'original_name': results['resume']['original_name'],
+            'file_path': results['resume']['filename'],  # Added missing field
             'file_size': results['resume']['size'],
             'mime_type': 'text/plain',
             'pinecone_id': resume_embedding_id
@@ -644,6 +645,7 @@ def submit_resume_and_jd():
             'file_type': 'job_description',
             'filename': results['job_description']['filename'],
             'original_name': results['job_description']['original_name'],
+            'file_path': results['job_description']['filename'],  # Added missing field
             'file_size': results['job_description']['size'],
             'mime_type': 'text/plain',
             'pinecone_id': jd_embedding_id

@@ -359,14 +359,28 @@ def delete_account():
 def add_upload_record():
     """Add file upload record to user profile"""
     try:
+        # Log incoming request details for debugging
+        app.logger.info(f"Upload record request - Content-Type: {request.content_type}")
+        app.logger.info(f"Request headers: {dict(request.headers)}")
+        app.logger.info(f"Request data length: {len(request.data) if request.data else 0}")
+        
         data = request.get_json()
+        
+        # Check if data was successfully parsed
+        if data is None:
+            app.logger.error(f"Failed to parse JSON data. Content-Type: {request.content_type}, Data: {request.data}")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid JSON data'
+            }), 400
         
         # Validate required fields
         required_fields = ['file_type', 'filename', 'file_path', 'file_size']
         if not all(field in data for field in required_fields):
+            app.logger.error(f"Missing required fields. Received: {list(data.keys())}, Required: {required_fields}")
             return jsonify({
                 'success': False,
-                'error': 'Missing required fields'
+                'error': f'Missing required fields. Required: {required_fields}, Received: {list(data.keys())}'
             }), 400
         
         success = user_management_service.add_upload_record(
@@ -387,6 +401,7 @@ def add_upload_record():
         }), 200
         
     except Exception as e:
+        app.logger.error(f"Upload record error: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
