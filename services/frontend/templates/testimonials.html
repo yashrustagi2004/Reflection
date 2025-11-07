@@ -3,22 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testimonials</title>
+    <title>Testimonials - Reflection</title>
     <style>
+        /* ============================================
+           GLOBAL STYLES & RESET
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Body styling with consistent gradient background */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
-            /* Add a simple purple gradient background to body */
             background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            color: #333;
+            line-height: 1.6;
         }
 
-        /* Navigation Bar - Same as landing page */
+        /* ============================================
+           NAVIGATION BAR
+           ============================================ */
         .navbar {
             position: fixed;
             top: 0;
@@ -53,48 +60,278 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .nav-btn:last-child {
-            background: white;
-            color: #333;
-            border: 3px solid #333;
-        }
-
-        /* Page content area */
-        .page-content {
-            padding-top: 100px;
-            min-height: 100vh;
-        }
-
-        /* Your page-specific styles here */
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 40px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            color: #6B46C1;
-            margin-bottom: 20px;
-        }
-
         .active-page {
             background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%) !important;
             color: white !important;
             border: none !important;
+        }
+
+        /* ============================================
+           PAGE CONTENT AREA
+           ============================================ */
+        .page-content {
+            padding-top: 140px;
+            padding-bottom: 60px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 50px 40px;
+        }
+
+        /* Page title */
+        .page-title {
+            text-align: center;
+            color: white;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 50px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* ============================================
+           TESTIMONIALS GRID
+           ============================================ */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Testimonial card with fade-in animation */
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        /* Stagger animation for testimonial cards */
+        .testimonial-card:nth-child(1) { animation-delay: 0.1s; }
+        .testimonial-card:nth-child(2) { animation-delay: 0.2s; }
+        .testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+        .testimonial-card:nth-child(4) { animation-delay: 0.4s; }
+        .testimonial-card:nth-child(n+5) { animation-delay: 0.5s; }
+
+        /* Card hover effect */
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Fade-in animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Testimonial content */
+        .testimonial-text {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.8;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .author-info h4 {
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .author-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Star rating */
+        .rating {
+            color: #fbbf24;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+            }
+
+            .nav-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .page-content {
+                padding-top: 120px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <a href="/about" class="nav-btn">About Us</a>
-        <a href="/testimonials" class="nav-btn active-page">Testimonials</a>
-        <a href="/privacy" class="nav-btn">Privacy Policy</a>
-        <a href="/contact" class="nav-btn">Contact Us</a>
-        <a href="/login" class="nav-btn">Login</a>
+        <a href="{{ url_for('about') }}" class="nav-btn">About Us</a>
+        <a href="{{ url_for('testimonials') }}" class="nav-btn active-page">Testimonials</a>
+        <a href="{{ url_for('privacy') }}" class="nav-btn">Privacy Policy</a>
+        <a href="{{ url_for('contact') }}" class="nav-btn">Contact Us</a>
+        <a href="{{ url_for('login') }}" class="nav-btn">Login</a>
     </nav>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <div class="container">
+            <h1 class="page-title">What Our Users Say</h1>
+            
+            <div class="testimonials-grid">
+                <!-- Testimonial 1 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "Reflection transformed my interview preparation. The personalized questions based on my resume and job description were spot-on. I landed my dream job at a top tech company!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SM</div>
+                        <div class="author-info">
+                            <h4>Sarah Mitchell</h4>
+                            <p>Software Engineer at Google</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "The AI-powered feedback helped me identify my weak points and improve my answers significantly. The practice questions were exactly what I needed for my behavioral interviews."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">JD</div>
+                        <div class="author-info">
+                            <h4>James Davis</h4>
+                            <p>Product Manager at Microsoft</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "As a recent graduate, I was nervous about interviews. Reflection gave me the confidence I needed with its comprehensive question bank and detailed analysis. Highly recommend!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">EW</div>
+                        <div class="author-info">
+                            <h4>Emily Wilson</h4>
+                            <p>Data Analyst at Amazon</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "The platform is intuitive and the questions are incredibly relevant. I appreciated how it analyzed both my technical skills and communication style. Worth every minute!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">RK</div>
+                        <div class="author-info">
+                            <h4>Robert Kim</h4>
+                            <p>Senior Developer at Meta</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 5 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "Reflection's personalized approach is unmatched. The questions were tailored perfectly to the role I was applying for, and the feedback helped me refine my answers."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">LM</div>
+                        <div class="author-info">
+                            <h4>Lisa Martinez</h4>
+                            <p>UX Designer at Apple</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 6 -->
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p class="testimonial-text">
+                        "I've tried multiple interview prep tools, but Reflection stands out. The combination of personalized questions and AI analysis is exactly what I needed to succeed."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">TC</div>
+                        <div class="author-info">
+                            <h4>Thomas Chen</h4>
+                            <p>Engineering Manager at Netflix</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
