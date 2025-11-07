@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact</title>
   <style>
+    /* ============================================
+       GLOBAL STYLES & RESET
+       ============================================ */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
+    /* Body styling with consistent gradient background */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       min-height: 100vh;
@@ -73,20 +77,26 @@
     }
 
     .container {
-      max-width: 600px;
+      max-width: 700px;
       width: 100%;
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 12px 45px rgba(0, 0, 0, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 50px;
+      border-radius: 25px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       text-align: center;
-      animation: fadeIn 1s ease-in-out;
+      animation: fadeInUp 0.8s ease-out;
     }
 
     h1 {
-      color: #6B46C1;
-      margin-bottom: 15px;
-      font-size: 2rem;
+      background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+      font-weight: 700;
     }
 
     p {
@@ -118,8 +128,9 @@
 
     input:focus, textarea:focus {
       border-color: #7C3AED;
-      box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
       outline: none;
+      background: white;
     }
 
     textarea {
@@ -127,9 +138,9 @@
     }
 
     .btn-submit {
-      background: linear-gradient(135deg, #6B46C1, #7C3AED, #8B5CF6);
+      background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
       color: white;
-      padding: 15px 40px;
+      padding: 16px 40px;
       border: none;
       border-radius: 12px;
       font-size: 18px;
@@ -137,12 +148,13 @@
       cursor: pointer;
       transition: all 0.3s ease;
       width: 100%;
+      box-shadow: 0 4px 15px rgba(107, 70, 193, 0.3);
     }
 
     .btn-submit:hover {
-      background: linear-gradient(135deg, #4C9FE8, #5BC0DE);
-      transform: scale(1.03);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      background: linear-gradient(135deg, #8B5CF6 0%, #6B46C1 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(107, 70, 193, 0.4);
     }
 
     /* Flash messages */
@@ -165,20 +177,26 @@
     }
 
     /* Animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
     }
   </style>
 </head>
 <body>
   
   <nav class="navbar">
-    <a href="/about" class="nav-btn">About Us</a>
-    <a href="/testimonials" class="nav-btn">Testimonials</a>
-    <a href="/privacy" class="nav-btn">Privacy Policy</a>
-    <a href="/contact" class="nav-btn active-page">Contact Us</a>
-    <a href="/login" class="nav-btn">Login</a>
+    <a href="{{ url_for('about') }}" class="nav-btn">About Us</a>
+    <a href="{{ url_for('testimonials') }}" class="nav-btn">Testimonials</a>
+    <a href="{{ url_for('privacy') }}" class="nav-btn">Privacy Policy</a>
+    <a href="{{ url_for('contact') }}" class="nav-btn active-page">Contact Us</a>
+    <a href="{{ url_for('login') }}" class="nav-btn">Login</a>
   </nav>
 
  
