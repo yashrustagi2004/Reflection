@@ -338,6 +338,26 @@
             cursor: not-allowed;
             transform: none;
         }
+        .record-controls {
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+            }
+
+            .mic-button {
+            background-color: #eee;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            }
+
+            .mic-button.recording {
+            background-color: #ff6b6b;
+            color: white;
+            }
 
         /* Analysis Section - full width below question */
         .analysis-container {
@@ -706,7 +726,7 @@
                     </div>
                     
                     <!-- Answer Input Card (Next to Question) -->
-                    <div class="card">
+                   <div class="card">
                         <div class="card-header">Your Answer</div>
                         <div class="card-body">
                             <label class="input-label" for="user-answer">
@@ -715,13 +735,21 @@
                             <textarea 
                                 id="user-answer" 
                                 class="answer-textarea" 
-                                placeholder="Share your thoughts, experiences, and approach to answering this question. Be specific and provide examples where relevant."></textarea>
+                                placeholder="Share your thoughts, experiences, and approach to answering this question. Be specific and provide examples where relevant.">
+                            </textarea>
+                            <div class="record-controls">
+                                <button id="mic-button" class="mic-button" title="Record answer">
+                                    🎙️
+                                </button>
+                            </div>
                             <div class="submit-section">
                                 <span class="char-count" id="char-count">0 characters</span>
-                                <button id="submit-answer" class="submit-button">
-                                    <span>Submit Answer</span>
-                                    <span>→</span>
-                                </button>
+                                <div class="button-group">
+                                    <button id="submit-answer" class="submit-button">
+                                        <span>Submit Answer</span>
+                                        <span>→</span>
+                                    </button>
+                                </div>
                             </div>
                             <div id="answer-feedback"></div>
                         </div>
@@ -751,14 +779,82 @@
     <script>
         // Global state
         let currentQuestion = null;
+        let mediaRecorder;
+        let audioChunks = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             loadQuestionData();
             setupEventListeners();
             setupCharacterCount();
+            setupSpeechToText();
         });
+        // ===============================
+        // 🎤 Speech-to-Text Setup
+        // ===============================
+        function setupSpeechToText() {
+            const micButton = document.getElementById('mic-button');
+            const originalHTML = micButton.innerHTML;
+            micButton.addEventListener('click', async () => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    // Stop recording
+                    mediaRecorder.stop();
+                    micButton.classList.remove('recording');
+                    micButton.textContent = '🎙️';
+                } else {
+                    try {
+                        // Request mic access
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+                        audioChunks = [];
 
+                        // Collect audio data
+                        mediaRecorder.ondataavailable = e => {
+                            if (e.data.size > 0) audioChunks.push(e.data);
+                        };
+
+                        // When recording stops → send to backend
+                        mediaRecorder.onstop = async () => {
+                            const micButton = document.getElementById('mic-button');
+                            micButton.innerHTML = '<div class="loading-spinner"></div>';
+                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const formData = new FormData();
+                            formData.append('file', blob, 'recorded_audio.webm');
+
+                            try {
+                                const response = await fetch('/api/speech-to-text', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                const data = await response.json();
+
+                                if (data.transcript) {
+                                    const textarea = document.getElementById('user-answer');
+                                    textarea.value = data.transcript;
+                                    showFeedback('Voice transcription successful!', 'success');
+                                } else {
+                                    showFeedback('Transcription error: ' + (data.error || 'Unknown issue'), 'error');
+                                }
+                            } catch (err) {
+                                alert('Error sending audio: ' + err.message);
+                            }finally {
+                                // Reset button
+                                micButton.innerHTML = originalHTML;
+                                micButton.classList.remove('recording');
+                            }
+                        };
+
+                        // Start recording
+                        mediaRecorder.start();
+                        micButton.classList.add('recording');
+                        micButton.textContent = '⏹️';
+                        showFeedback('Recording... Click again to stop.', 'info');
+                    } catch (err) {
+                        alert('Microphone access denied or unavailable.');
+                    }
+                }
+            });
+        }
         // Load question data from sessionStorage
         function loadQuestionData() {
             const questionData = sessionStorage.getItem('currentQuestion');

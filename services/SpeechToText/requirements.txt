@@ -1,0 +1,38 @@
+-r ../shared/requirements.txt
+SpeechRecognition==3.14.3
+pydub==0.25.1
+
+# ===============================
+# ⚙️ FFMPEG INSTALLATION INSTRUCTIONS
+# ===============================
+# ffmpeg is NOT installed via pip. It must be installed at the system level.
+# Make sure it's available in your PATH before running the service.
+
+# ----------- Windows -----------
+# 1. Go to: https://ffmpeg.org/download.html
+# 2. Under "Get packages & executable files", click on "Windows builds from gyan.dev".
+# 3. Download the latest build ZIP (ffmpeg-git-essentials.7z).
+# 4. Extract it (e.g., to C:\ffmpeg).
+# 5. Add the bin folder (C:\ffmpeg\bin) to your system PATH:
+#    - Search “Edit environment variables”
+#    - Under “System Variables”, select “Path” → “Edit” → “New”
+#    - Add: C:\ffmpeg\bin
+# 6. Open a new terminal and verify installation:
+#       ffmpeg -version
+
+# ----------- Linux -------------
+# Ubuntu/Debian:
+#     sudo apt update
+#     sudo apt install ffmpeg -y
+# Fedora:
+#     sudo dnf install ffmpeg -y
+# Arch Linux:
+#     sudo pacman -S ffmpeg
+# Verify installation:
+#     ffmpeg -version
+
+# ----------- macOS -------------
+# Using Homebrew (recommended):
+#     brew install ffmpeg
+# Verify installation:
+#     ffmpeg -version

@@ -22,7 +22,7 @@ class ServiceClient:
             'login-management': os.getenv('LOGIN_MANAGEMENT_URL', 'http://localhost:5001'),
             'file-parsing': os.getenv('FILE_PARSING_URL', 'http://localhost:5002'),
             'question-answer-generation': os.getenv('QA_GENERATION_URL', 'http://localhost:5003'),
-            'answer-analysis': os.getenv('ANSWER_ANALYSIS_URL', 'http://localhost:5004'),
+            'speech-to-text': os.getenv('SPEECH_TO_TEXT_URL', 'http://localhost:5004'),
             'resources': os.getenv('RESOURCES_URL', 'http://localhost:5005'),
         }
     

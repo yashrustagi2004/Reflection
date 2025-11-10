@@ -512,6 +512,27 @@ def delete_account():
     
     return redirect(url_for('delete_account_page', error='delete_failed'))
 
+@app.route('/api/speech-to-text', methods=['POST'])
+@login_required
+def proxy_speech_to_text():
+    """Proxy audio upload to the SpeechToText microservice"""
+    try:
+        token = get_user_token()
+        audio_file = request.files.get('file')
+        if not audio_file:
+            return jsonify({"success": False, "error": "No audio file uploaded"}), 400
+
+        # Forward the file to the STT microservice
+        files = {'file': (audio_file.filename, audio_file.stream, audio_file.mimetype)}
+        response = service_client.post(
+            'speech-to-text',
+            '/SpeechToText',
+            files=files,
+            user_token=token
+        )
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # ==================== File Upload Routes ====================
 
