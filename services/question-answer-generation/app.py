@@ -120,14 +120,18 @@ def generate_questions():
                 "error": "user_id is required"
             }), 400
 
-        if not resume_text or not job_description_text:
+        if not resume_text:
             return jsonify({
                 "success": False,
-                "error": "Both resume_text and jd_text are required"
+                "error": "resume_text is required"
             }), 400
-
-        # Generate questions using QA service
-        print(f"[QA SERVICE] Generating questions for user: {user_id}")
+        
+        # JD is optional - if not provided, generate resume-focused questions
+        if not job_description_text:
+            job_description_text = "General interview preparation"
+            print(f"[QA SERVICE] No JD provided - generating resume-focused questions for user: {user_id}")
+        else:
+            print(f"[QA SERVICE] Generating questions for user: {user_id} with resume and JD")
         questions = qa_service.generate_questions(resume_text, job_description_text)
         
         if not questions:

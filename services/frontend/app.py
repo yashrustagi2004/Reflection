@@ -797,6 +797,7 @@ def submit_job_description():
 def submit_mixed():
     """
     Mixed endpoint to submit resume file + job description text
+    Generates questions and fetches resources after processing
     """
     try:
         # Check if resume file is provided
@@ -823,13 +824,14 @@ def submit_mixed():
                 'error': 'Resume file is required'
             }), 400
         
+        user_token = get_user_token()
+        
         # Process resume through file-parsing service
         resume_file.stream.seek(0)
         resume_files = {
             'resume': (resume_file.filename, resume_file.stream, resume_file.mimetype)
         }
 
-        user_token = get_user_token()
         resume_response = service_client.post(
             'file-parsing',
             '/api/files/upload/resume',
@@ -859,11 +861,15 @@ def submit_mixed():
                 'error': 'Job description processing failed'
             }), 500
         
+        # Note: Question generation and category detection happen automatically
+        # in file-parsing service after both files are processed
+        
         return jsonify({
             'success': True,
             'message': 'Files processed successfully! Resume processed with personal information removed. Job description saved as provided.',
             'resume': resume_response,
-            'job_description': jd_response
+            'job_description': jd_response,
+            'redirect_url': '/practice'
         }), 200
         
     except Exception as e:
@@ -946,6 +952,7 @@ def submit_combined():
 def process_resume():
     """
     Process uploaded resume with PII removal - expects file in request
+    Generates questions if both resume and JD are available
     """
     try:
         # Check if resume file is in the request
@@ -978,18 +985,22 @@ def process_resume():
             user_token=user_token
         )
         
-        if response and response.get('success'):
-            return jsonify({
-                'success': True,
-                'message': 'Resume processed successfully! Personal information has been removed.',
-                'data': response
-            }), 200
-        else:
+        if not response or not response.get('success'):
             error_msg = response.get('error', 'Resume processing failed') if response else 'Service unavailable'
             return jsonify({
                 'success': False,
                 'error': error_msg
             }), 500
+        
+        # Note: Question generation happens automatically in file-parsing service
+        # No need to trigger it here - it's handled for resume-only uploads
+        
+        return jsonify({
+            'success': True,
+            'message': 'Resume processed successfully! Personal information has been removed.',
+            'data': response,
+            'redirect_url': '/practice'
+        }), 200
             
     except Exception as e:
         return jsonify({

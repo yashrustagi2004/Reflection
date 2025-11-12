@@ -142,13 +142,14 @@ def debug_request_headers():
 @app.route('/api/files/upload/resume', methods=['POST'])
 def upload_resume():
     """
-    Upload and validate resume file
+    Upload and validate resume file, trigger question generation if JD exists
     
     Security checks:
     - File size validation
     - File type validation (extension, MIME type, magic numbers)
     - Filename sanitization
     - Path traversal prevention
+    - Authentication required
     """
     try:
         if 'resume' not in request.files:
@@ -158,7 +159,19 @@ def upload_resume():
             }), 400
         
         file = request.files['resume']
-        user_id = 'anonymous'  # Temporary fix for authentication
+        
+        # Extract user_id from JWT token
+        user_id = 'anonymous'  # Default fallback
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        
+        if token:
+            try:
+                payload = auth_middleware.verify_token(token)
+                if payload and 'user_id' in payload:
+                    user_id = payload['user_id']
+                    print(f"[FILE PARSING] Authenticated user: {user_id}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Token verification failed: {e}")
         
         # Validate file security
         is_valid, message, validation_details = file_security.validate_upload(file)
@@ -182,6 +195,7 @@ def upload_resume():
         file.save(temp_file_path)
         
         # Parse resume and remove PII
+        cleaned_text = None
         try:
             # Validate file for parsing
             is_valid, validation_message = EnhancedFileParser.validate_file_for_parsing(temp_file_path)
@@ -208,9 +222,8 @@ def upload_resume():
             
             # Store parsed content in global variable
             global parsed_content_storage
-            parsed_content_storage['resume_file_content'] = cleaned_text
+            parsed_content_storage['resume_text_content'] = cleaned_text
             print(f"[FILE PARSING] Resume file content stored: {len(cleaned_text)} characters")
-            print(f"[FILE PARSING] Resume preview: {cleaned_text[:200]}...")
             
             # Save the cleaned content as a new text file
             final_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'resumes', safe_filename.rsplit('.', 1)[0] + '_cleaned.txt')
@@ -237,23 +250,100 @@ def upload_resume():
         # Get file metadata for the cleaned file
         file_metadata = file_security.get_file_metadata(file_path)
         
+        # Store embedding in Pinecone
+        timestamp = int(time.time())
+        resume_embedding_id = None
+        if pinecone_service and cleaned_text:
+            try:
+                resume_embedding_id = pinecone_service.store_document(
+                    user_id=user_id,
+                    document_type='resume',
+                    text=cleaned_text,
+                    timestamp=timestamp,
+                    metadata={
+                        'original_filename': file.filename,
+                        'processed': True,
+                        'pii_removed': True
+                    }
+                )
+                print(f"[FILE PARSING] ✅ Resume embedding stored: {resume_embedding_id}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Resume embedding storage failed: {e}")
+        
         # Notify login service to update user record
-        token = request.headers.get('Authorization', '').replace('Bearer ', '')
         upload_record = {
             'file_type': 'resume',
             'filename': os.path.basename(file_path),
             'original_name': file.filename,
             'file_path': file_path,
             'file_size': file_metadata['size'],
-            'mime_type': 'text/plain'  # Always text after processing
+            'mime_type': 'text/plain',  # Always text after processing
+            'pinecone_id': resume_embedding_id
         }
         
-        service_client.post(
-            'login-management',
-            '/api/users/uploads',
-            upload_record,
-            user_token=token
-        )
+        try:
+            service_client.post(
+                'login-management',
+                '/api/users/uploads',
+                upload_record,
+                user_token=token
+            )
+        except Exception as e:
+            print(f"[FILE PARSING] ⚠️ Failed to record upload: {e}")
+        
+        # Always trigger question generation and category detection based on resume
+        # JD is optional - if not provided, questions will be resume-only focused
+        jd_text = parsed_content_storage.get('jd_text_content', '')
+        
+        try:
+            # Generate questions (with or without JD)
+            qa_payload = {
+                "user_id": user_id,
+                "resume_text": cleaned_text,
+                "jd_text": jd_text if jd_text else "",  # Empty string if no JD
+                "resume_embedding_id": resume_embedding_id,
+                "jd_embedding_id": None  # May not have embedding if uploaded separately
+            }
+
+            qa_response = requests.post(
+                "http://127.0.0.1:5003/api/questions/generate",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json=qa_payload,
+                timeout=30
+            )
+
+            if qa_response.status_code == 200:
+                print(f"[FILE PARSING] ✅ Questions generated for user {user_id} (resume-only: {not jd_text})")
+            else:
+                print(f"[FILE PARSING] ⚠️ Question generation failed: {qa_response.text}")
+        except Exception as e:
+            print(f"[FILE PARSING] ⚠️ Question generation error: {e}")
+        
+        # Detect and store job categories (resume-only or with JD)
+        try:
+            if jd_text:
+                # Both resume and JD available
+                detection_results = JobCategoryDetector.detect_categories_from_both(cleaned_text, jd_text)
+                job_categories_result = JobCategoryDetector.format_results_for_response(detection_results)
+                detected_categories_list = job_categories_result.get('detected_categories', [])
+            else:
+                # Resume only
+                detection_results = JobCategoryDetector.detect_categories(cleaned_text)
+                detected_categories_list = JobCategoryDetector.get_detected_categories_list(detection_results)
+            
+            if detected_categories_list:
+                print(f"[FILE PARSING] ✅ Detected categories: {', '.join(detected_categories_list)}")
+                
+                # Store in user profile
+                categories_payload = {'detected_categories': detected_categories_list}
+                service_client.post('login-management', '/api/users/categories', categories_payload, user_token=token)
+            else:
+                print(f"[FILE PARSING] ℹ️ No specific categories detected from resume")
+        except Exception as e:
+            print(f"[FILE PARSING] ⚠️ Category detection error: {e}")
         
         return jsonify({
             'success': True,
@@ -265,10 +355,13 @@ def upload_resume():
                 'mime_type': 'text/plain',  # Always text after processing
                 'processed': True,
                 'pii_removed': True
-            }
+            },
+            'pinecone_id': resume_embedding_id
         }), 200
         
     except Exception as e:
+        print(f"[FILE PARSING] ❌ Resume upload failed: {e}")
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'Upload failed: {str(e)}'
@@ -375,12 +468,13 @@ def upload_job_description():
 @app.route('/api/files/text/job-description', methods=['POST'])
 def save_text_job_description():
     """
-    Save text-based job description
+    Save text-based job description and trigger question generation if resume exists
     
     Security checks:
     - Input validation
     - Length validation
     - XSS prevention
+    - Authentication required
     """
     try:
         data = request.get_json()
@@ -401,41 +495,122 @@ def save_text_job_description():
                 'error': message
             }), 400
         
+        # Extract user_id from JWT token
+        user_id = 'anonymous'  # Default fallback
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        
+        if token:
+            try:
+                payload = auth_middleware.verify_token(token)
+                if payload and 'user_id' in payload:
+                    user_id = payload['user_id']
+                    print(f"[FILE PARSING] Authenticated user: {user_id}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Token verification failed: {e}")
+        
         # Sanitize and save
         sanitized_text = file_security.sanitize_text(text_content)
-        user_id = 'anonymous'  # Temporary fix for authentication
         
         # Store text content in global variable
         global parsed_content_storage
         parsed_content_storage['jd_text_content'] = sanitized_text
         print(f"[FILE PARSING] JD text content stored: {len(sanitized_text)} characters")
-        print(f"[FILE PARSING] JD text preview: {sanitized_text[:200]}...")
         
         # Generate filename
-        filename = f"jd_text_{user_id}_{int(__import__('time').time())}.txt"
+        timestamp = int(time.time())
+        filename = f"jd_text_{user_id}_{timestamp}.txt"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions', filename)
         
         # Save file
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(sanitized_text)
         
+        file_metadata = file_security.get_file_metadata(file_path)
+        
+        # Store embedding in Pinecone if resume exists
+        jd_embedding_id = None
+        if pinecone_service and parsed_content_storage.get('resume_text_content'):
+            try:
+                jd_embedding_id = pinecone_service.store_document(
+                    user_id=user_id,
+                    document_type='job_description',
+                    text=sanitized_text,
+                    timestamp=timestamp,
+                    metadata={
+                        'original_filename': 'Text Job Description',
+                        'processed': True,
+                        'pii_removed': False
+                    }
+                )
+                print(f"[FILE PARSING] ✅ JD embedding stored: {jd_embedding_id}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ JD embedding storage failed: {e}")
+        
         # Notify login service
-        token = request.headers.get('Authorization', '').replace('Bearer ', '')
         upload_record = {
             'file_type': 'job_description_text',
             'filename': filename,
             'original_name': 'Text Job Description',
             'file_path': file_path,
             'file_size': len(sanitized_text.encode('utf-8')),
-            'mime_type': 'text/plain'
+            'mime_type': 'text/plain',
+            'pinecone_id': jd_embedding_id
         }
         
-        service_client.post(
-            'login-management',
-            '/api/users/uploads',
-            upload_record,
-            user_token=token
-        )
+        try:
+            service_client.post(
+                'login-management',
+                '/api/users/uploads',
+                upload_record,
+                user_token=token
+            )
+        except Exception as e:
+            print(f"[FILE PARSING] ⚠️ Failed to record upload: {e}")
+        
+        # If resume exists, trigger question generation and category detection
+        resume_text = parsed_content_storage.get('resume_text_content')
+        if resume_text and sanitized_text:
+            try:
+                # Generate questions
+                qa_payload = {
+                    "user_id": user_id,
+                    "resume_text": resume_text,
+                    "jd_text": sanitized_text,
+                    "resume_embedding_id": None,  # May not have embedding if uploaded separately
+                    "jd_embedding_id": jd_embedding_id
+                }
+
+                qa_response = requests.post(
+                    "http://127.0.0.1:5003/api/questions/generate",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json"
+                    },
+                    json=qa_payload,
+                    timeout=30
+                )
+
+                if qa_response.status_code == 200:
+                    print(f"[FILE PARSING] ✅ Questions generated for user {user_id}")
+                else:
+                    print(f"[FILE PARSING] ⚠️ Question generation failed: {qa_response.text}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Question generation error: {e}")
+            
+            # Detect and store job categories
+            try:
+                detection_results = JobCategoryDetector.detect_categories_from_both(resume_text, sanitized_text)
+                job_categories_result = JobCategoryDetector.format_results_for_response(detection_results)
+                detected_categories_list = job_categories_result.get('detected_categories', [])
+                
+                if detected_categories_list:
+                    print(f"[FILE PARSING] ✅ Detected categories: {', '.join(detected_categories_list)}")
+                    
+                    # Store in user profile
+                    categories_payload = {'detected_categories': detected_categories_list}
+                    service_client.post('login-management', '/api/users/categories', categories_payload, user_token=token)
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Category detection error: {e}")
         
         return jsonify({
             'success': True,
@@ -443,12 +618,15 @@ def save_text_job_description():
             'file': {
                 'filename': filename,
                 'size': len(sanitized_text.encode('utf-8')),
-                'processed': False,  # Not processed, original text saved
+                'processed': True,
                 'pii_removed': False
-            }
+            },
+            'pinecone_id': jd_embedding_id
         }), 200
         
     except Exception as e:
+        print(f"[FILE PARSING] ❌ Text JD save failed: {e}")
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'Save failed: {str(e)}'

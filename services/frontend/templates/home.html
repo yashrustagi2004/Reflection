@@ -996,7 +996,7 @@
                             </div>
                             
                             <div class="file-requirements">
-                                File uploads: PDF, DOC, DOCX<br>
+                                Allowed: PDF, DOC, DOCX<br>
                                 Max size: 10MB
                             </div>
                         </div>
@@ -1217,9 +1217,9 @@
             if (type === 'resume') {
                 processingState.resumeProcessing = true;
                 updateProcessingState();
-                button.innerHTML = '<span>⏳</span> Processing Resume...';
+                button.innerHTML = '<span>⏳</span> Processing Files...';
             } else {
-                button.innerHTML = '<span>⏳</span> Processing...';
+                button.innerHTML = '<span>⏳</span> Processing Files...';
             }
             
             button.disabled = true;
