@@ -178,45 +178,6 @@ def generate_questions():
         }), 500
 
 
-@app.route("/api/answers/generate", methods=["POST"])
-@auth_middleware.require_auth
-def generate_ideal_answers():
-    """
-    Generate ideal answers for questions based on resume and job description.
-    Protected by Bearer token.
-    """
-    try:
-        data = request.get_json()
-
-        if not data:
-            return jsonify({"success": False, "error": "No data provided"}), 400
-
-        questions = data.get("questions", [])
-        resume_text = data.get("resume_text", "").strip()
-        job_description_text = data.get("job_description_text", "").strip()
-
-        if not questions or not resume_text or not job_description_text:
-            return jsonify({
-                "success": False,
-                "error": "Questions, resume text, and job description text are required"
-            }), 400
-
-        answers = qa_service.generate_ideal_answers(questions, resume_text, job_description_text)
-
-        return jsonify({
-            "success": True,
-            "answers": answers,
-            "message": f"Generated ideal answers for {len(answers)} questions"
-        }), 200
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({
-            "success": False,
-            "error": f"Answer generation failed: {str(e)}"
-        }), 500
-
-
 @app.route("/api/questions/user/<user_id>", methods=["GET"])
 @auth_middleware.require_auth
 def get_user_questions(user_id):

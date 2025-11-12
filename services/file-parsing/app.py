@@ -16,7 +16,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from shared.auth_middleware import AuthMiddleware
 from shared.service_client import ServiceClient
 from services.file_security_service import FileSecurityService
-from services.file_parser_service import FileParserService
 from services.enhanced_file_parser import EnhancedFileParser
 from services.pinecone_service import get_pinecone_service
 from services.job_category_detector import JobCategoryDetector
@@ -42,7 +41,6 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions'), exist
 auth_middleware = AuthMiddleware()
 service_client = ServiceClient('file-parsing')
 file_security = FileSecurityService()
-file_parser = FileParserService()
 
 # Initialize Pinecone service (lazy loading to handle missing env vars gracefully)
 pinecone_service = None
@@ -750,58 +748,7 @@ def submit_resume_and_jd():
 
 
 
-# ==================== File Parsing ====================
-
-@app.route('/api/files/parse', methods=['POST'])
-@auth_middleware.require_auth
-def parse_file():
-    """
-    Parse document file (PDF, DOC, DOCX) and extract text
-    
-    Args (JSON):
-        file_path: Path to the file to parse
-        
-    Returns:
-        Extracted text content
-    """
-    try:
-        data = request.get_json()
-        file_path = data.get('file_path')
-        
-        if not file_path:
-            return jsonify({
-                'success': False,
-                'error': 'File path is required'
-            }), 400
-        
-        # Security check: Ensure file exists and is in allowed directory
-        if not file_security.is_safe_path(file_path, app.config['UPLOAD_FOLDER']):
-            return jsonify({
-                'success': False,
-                'error': 'Invalid file path'
-            }), 403
-        
-        # Parse file
-        text_content = file_parser.parse_document(file_path)
-        
-        if text_content is None:
-            return jsonify({
-                'success': False,
-                'error': 'Failed to parse file'
-            }), 500
-        
-        return jsonify({
-            'success': True,
-            'text': text_content,
-            'length': len(text_content)
-        }), 200
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Parse failed: {str(e)}'
-        }), 500
-
+# ==================== File Upload Requirements ====================
 
 @app.route('/api/files/requirements', methods=['GET'])
 def get_upload_requirements():

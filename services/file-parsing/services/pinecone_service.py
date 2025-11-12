@@ -321,32 +321,6 @@ class PineconeService:
         except Exception as e:
             logger.error(f"❌ Failed to replace user documents: {e}")
             return None, None
-    
-    def get_embedding_for_qa(
-        self,
-        user_id: str
-    ) -> Tuple[Optional[List[float]], Optional[List[float]]]:
-        """
-        Get resume and JD embeddings for Q&A generation
-        
-        Args:
-            user_id: User identifier
-            
-        Returns:
-            Tuple of (resume_embedding, jd_embedding)
-        """
-        embeddings = self.retrieve_embeddings(user_id)
-        
-        resume_embedding = None
-        jd_embedding = None
-        
-        if 'resume' in embeddings:
-            resume_embedding = embeddings['resume']['embedding']
-        
-        if 'job_description' in embeddings:
-            jd_embedding = embeddings['job_description']['embedding']
-        
-        return resume_embedding, jd_embedding
 
 
 # Global instance
