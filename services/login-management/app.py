@@ -427,6 +427,62 @@ def get_uploads():
         }), 500
 
 
+@app.route('/api/users/categories', methods=['POST'])
+@auth_middleware.require_auth
+def store_categories():
+    """Store detected job categories for user"""
+    try:
+        data = request.get_json()
+        detected_categories = data.get('detected_categories', [])
+        
+        if not detected_categories:
+            return jsonify({
+                'success': False,
+                'error': 'No categories provided'
+            }), 400
+        
+        # Update user document with detected categories
+        success = user_model.update_user_categories(request.user_id, detected_categories)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Categories stored successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to store categories'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error storing categories: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/users/categories', methods=['GET'])
+@auth_middleware.require_auth
+def get_categories():
+    """Get stored job categories for user"""
+    try:
+        categories = user_model.get_user_categories(request.user_id)
+        
+        return jsonify({
+            'success': True,
+            'categories': categories if categories else []
+        }), 200
+        
+    except Exception as e:
+        print(f"Error retrieving categories: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 if __name__ == '__main__':
     port = int(os.getenv('LOGIN_MANAGEMENT_PORT', 5001))
     app.run(

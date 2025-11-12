@@ -162,6 +162,52 @@ class UserModel:
         except Exception:
             return None
     
+    def update_user_categories(self, user_id: str, categories: list) -> bool:
+        """
+        Update user's detected job categories
+        
+        Args:
+            user_id: User ID
+            categories: List of detected category names
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            result = self.collection.update_one(
+                {"_id": ObjectId(user_id)},
+                {
+                    "$set": {
+                        "detected_categories": categories,
+                        "categories_updated_at": datetime.now(timezone.utc),
+                        "updated_at": datetime.now(timezone.utc)
+                    }
+                }
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"Error updating categories: {e}")
+            return False
+    
+    def get_user_categories(self, user_id: str) -> Optional[list]:
+        """
+        Get user's detected job categories
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            List of category names or None
+        """
+        try:
+            user = self.collection.find_one(
+                {"_id": ObjectId(user_id)},
+                {"detected_categories": 1}
+            )
+            return user.get('detected_categories', []) if user else None
+        except Exception:
+            return None
+    
     def delete_user(self, user_id: str) -> bool:
         """
         Soft delete user (mark as inactive)

@@ -19,6 +19,7 @@ from services.file_security_service import FileSecurityService
 from services.file_parser_service import FileParserService
 from services.enhanced_file_parser import EnhancedFileParser
 from services.pinecone_service import get_pinecone_service
+from services.job_category_detector import JobCategoryDetector
 from flask import session
 import traceback, requests, time
 # Load environment variables
@@ -694,6 +695,40 @@ def submit_resume_and_jd():
                 "error": f"File processing succeeded but Q&A generation failed: {str(e)}"
             }), 500
         
+        # ================== Job Category Detection ==================
+        job_categories_result = {}
+        detected_categories_list = []
+        try:
+            # Perform regex-based category detection on both resume and JD
+            detection_results = JobCategoryDetector.detect_categories_from_both(resume_text, jd_text)
+            job_categories_result = JobCategoryDetector.format_results_for_response(detection_results)
+            
+            detected_categories_list = job_categories_result.get('detected_categories', [])
+            if detected_categories_list:
+                print(f"[FILE PARSING] ✅ Detected job categories: {', '.join(detected_categories_list)}")
+            else:
+                print("[FILE PARSING] ℹ️ No specific job categories detected")
+                
+        except Exception as e:
+            print(f"[FILE PARSING] ⚠️ Category detection failed: {e}")
+            traceback.print_exc()
+            # Don't fail the request if category detection fails
+            job_categories_result = {
+                'detected_categories': [],
+                'details': {}
+            }
+        
+        # ================== Store Categories in User Profile ==================
+        if detected_categories_list:
+            try:
+                categories_payload = {
+                    'detected_categories': detected_categories_list
+                }
+                service_client.post('login-management', '/api/users/categories', categories_payload, user_token=token)
+                print(f"[FILE PARSING] ✅ Stored categories in user profile for user {user_id}")
+            except Exception as e:
+                print(f"[FILE PARSING] ⚠️ Failed to store categories in login service: {e}")
+        
         # ================== Final Success Response ==================
         return jsonify({
             'success': True,
@@ -703,6 +738,7 @@ def submit_resume_and_jd():
                 'resume_id': resume_embedding_id,
                 'jd_id': jd_embedding_id
             },
+            'job_categories': job_categories_result,
             'user_id': user_id,
             'redirect_url': '/practice'
         }), 200

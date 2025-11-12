@@ -15,7 +15,6 @@
             box-sizing: border-box;
         }
 
-        /* Body styling with consistent gradient background */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
@@ -29,7 +28,7 @@
         }
 
         /* ============================================
-           SIDEBAR NAVIGATION (Matching other pages)
+           SIDEBAR NAVIGATION
            ============================================ */
         .sidebar {
             width: 250px;
@@ -95,21 +94,26 @@
             font-size: 18px;
         }
 
-        /* Mobile menu toggle */
         .mobile-menu-toggle {
             display: none;
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 24px;
+            left: 24px;
             z-index: 1001;
-            background: rgba(40, 20, 80, 0.95);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #6B46C1;
             border: none;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease;
+        }
+
+        .mobile-menu-toggle:active {
+            transform: scale(0.95);
         }
 
         /* ============================================
@@ -123,158 +127,90 @@
         }
 
         .content-header {
-            margin-bottom: 40px;
+            margin-bottom: 48px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .page-title {
             color: white;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .page-subtitle {
             color: rgba(255, 255, 255, 0.9);
             font-size: 18px;
             font-weight: 400;
+            line-height: 1.6;
         }
 
         /* ============================================
-           RESOURCE TILES GRID
+           RESOURCES CONTAINER
            ============================================ */
-        .resources-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 30px;
+        .resources-container {
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Resource tile card */
-        .resource-tile {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
+        .resources-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        /* Loading State */
+        .loading-container {
             display: flex;
             flex-direction: column;
-            animation: fadeInUp 0.6s ease-out;
-            animation-fill-mode: both;
-            cursor: pointer;
-        }
-
-        /* Stagger animation for tiles */
-        .resource-tile:nth-child(1) { animation-delay: 0.1s; }
-        .resource-tile:nth-child(2) { animation-delay: 0.2s; }
-        .resource-tile:nth-child(3) { animation-delay: 0.3s; }
-        .resource-tile:nth-child(4) { animation-delay: 0.4s; }
-        .resource-tile:nth-child(5) { animation-delay: 0.5s; }
-        .resource-tile:nth-child(n+6) { animation-delay: 0.6s; }
-
-        /* Tile hover effect */
-        .resource-tile:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Video/Image thumbnail container */
-        .tile-thumbnail {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
-            display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
+            min-height: 400px;
+            color: white;
         }
 
-        .tile-thumbnail img,
-        .tile-thumbnail video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Play button overlay for videos */
-        .play-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .loading-spinner {
             width: 60px;
             height: 60px;
-            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #6B46C1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
         }
 
-        .resource-tile:hover .play-overlay {
-            opacity: 1;
-        }
-
-        /* Placeholder icon when no thumbnail */
-        .thumbnail-placeholder {
-            font-size: 64px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Tile content section */
-        .tile-content {
-            padding: 25px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tile-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 12px;
-            line-height: 1.3;
-        }
-
-        .tile-description {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-            flex: 1;
-            margin-bottom: 15px;
-        }
-
-        .tile-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 12px;
-            color: #999;
-            padding-top: 15px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .tile-category {
-            background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-weight: 600;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* ============================================
-           ANIMATIONS
+           CATEGORY ACCORDION
            ============================================ */
-        @keyframes fadeInUp {
+        .category-accordion {
+            margin-bottom: 20px;
+            animation: slideInUp 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .category-accordion:nth-child(1) { animation-delay: 0.1s; }
+        .category-accordion:nth-child(2) { animation-delay: 0.15s; }
+        .category-accordion:nth-child(3) { animation-delay: 0.2s; }
+        .category-accordion:nth-child(4) { animation-delay: 0.25s; }
+        .category-accordion:nth-child(5) { animation-delay: 0.3s; }
+
+        @keyframes slideInUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -285,13 +221,418 @@
             }
         }
 
+        /* Category Header */
+        .category-header {
+            background: white;
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 28px 32px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .category-header:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .category-header:hover::before {
+            opacity: 1;
+        }
+
+        .category-header.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .category-header-content {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-icon-wrapper {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover .category-icon-wrapper {
+            transform: scale(1.08) rotate(-5deg);
+            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.45);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .category-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .stat-badge:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .stat-badge .icon {
+            font-size: 16px;
+        }
+
+        .expand-indicator {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .category-header.active .expand-indicator {
+            transform: rotate(180deg);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* Category Body */
+        .category-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-body.active {
+            max-height: 5000px;
+        }
+
+        .category-content {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 0 32px 32px 32px;
+            margin-top: -8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Resource Tabs */
+        .resource-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            padding-top: 32px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .tab-button {
+            padding: 14px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 15px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            margin-bottom: -2px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .tab-count {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Resource Lists */
+        .resource-list {
+            display: none;
+        }
+
+        .resource-list.active {
+            display: grid;
+            gap: 16px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Resource Cards */
+        .resource-card {
+            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+            border: 2px solid rgba(0, 0, 0, 0.06);
+            border-radius: 14px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resource-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .resource-card:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateX(6px);
+            background: white;
+        }
+
+        .resource-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .resource-link {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .resource-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .resource-card:hover .resource-icon {
+            transform: scale(1.1) rotate(-5deg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .resource-details {
+            flex: 1;
+        }
+
+        .resource-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+            line-height: 1.5;
+            letter-spacing: -0.2px;
+        }
+
+        .resource-description {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .resource-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .external-link-icon {
+            color: #667eea;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover .external-link-icon {
+            transform: translate(4px, -4px);
+        }
+
+        /* Project Cards - Special Styling */
+        .project-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .project-card:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+        }
+
+        .project-card .resource-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .project-objective {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .project-objective::before {
+            content: '🎯';
+            font-size: 16px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-state-icon {
+            font-size: 72px;
+            margin-bottom: 24px;
+            opacity: 0.7;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            color: #718096;
+            line-height: 1.7;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .empty-state-button {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .empty-state-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
         /* ============================================
            RESPONSIVE DESIGN
            ============================================ */
         @media (max-width: 968px) {
-            .resources-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 25px;
+            .main-content {
+                padding: 32px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .category-name {
+                font-size: 22px;
             }
         }
 
@@ -316,15 +657,43 @@
             }
 
             .page-title {
-                font-size: 26px;
+                font-size: 28px;
             }
 
             .page-subtitle {
                 font-size: 16px;
             }
 
-            .resources-grid {
-                grid-template-columns: 1fr;
+            .category-header {
+                padding: 20px 24px;
+            }
+
+            .category-header-content {
+                gap: 16px;
+            }
+
+            .category-icon-wrapper {
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
+            }
+
+            .category-name {
+                font-size: 20px;
+            }
+
+            .resource-card {
+                padding: 20px;
+            }
+
+            .resource-link {
+                gap: 16px;
+            }
+
+            .resource-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
             }
         }
 
@@ -334,26 +703,40 @@
                 padding-top: 70px;
             }
 
-            .tile-content {
-                padding: 20px;
+            .page-title {
+                font-size: 26px;
             }
 
-            .tile-title {
-                font-size: 18px;
+            .category-header {
+                padding: 16px 20px;
             }
 
-            .tile-description {
-                font-size: 13px;
+            .category-stats {
+                gap: 8px;
+            }
+
+            .stat-badge {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .resource-tabs {
+                gap: 4px;
+                overflow-x: auto;
+            }
+
+            .tab-button {
+                padding: 12px 18px;
+                font-size: 14px;
+                white-space: nowrap;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
 
     <div class="container">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Resources</h2>
@@ -374,7 +757,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link active">
+                        <a href="{{ url_for('resources') }}" class="nav-link active">
                             <span class="nav-icon">📚</span>
                             Resources
                         </a>
@@ -401,116 +784,29 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="content-header">
                 <h1 class="page-title">Recommended Resources</h1>
-                <p class="page-subtitle">Explore courses, videos, and materials to enhance your interview preparation.</p>
+                <p class="page-subtitle">Explore courses, certifications, and projects to enhance your interview preparation.</p>
             </div>
 
-            <!-- Resources Grid - Will be populated from backend -->
-            <div class="resources-grid" id="resources-grid">
-                <!-- Resource tiles will be dynamically loaded here from backend -->
-                <!-- Backend Endpoint: GET /api/resources -->
-                <!-- Expected Response: { "success": true, "resources": [{ "id": 1, "title": "...", "description": "...", "thumbnail_url": "...", "video_url": "...", "type": "video|course|certificate", "category": "..." }, ...] } -->
+            <div class="resources-container">
+                <div class="resources-grid" id="resources-grid">
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <p>Loading your personalized resources...</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        /* ============================================
-           BACKEND API ENDPOINTS - COMMENTED FOR REFERENCE
-           ============================================
-           
-           These endpoints should be implemented in the backend to fetch resources data:
-           
-           1. GET /api/resources
-              Description: Fetch list of all available resources (courses, videos, certificates)
-              Authentication: Required (JWT token in session)
-              Query Parameters (optional):
-                - type: Filter by resource type (video, course, certificate)
-                - category: Filter by category
-                - limit: Number of resources to return
-                - offset: Pagination offset
-              Response Format:
-              {
-                  "success": true,
-                  "resources": [
-                      {
-                          "id": 1,
-                          "title": "Resource Title",
-                          "description": "Brief description of the resource",
-                          "thumbnail_url": "https://example.com/thumbnail.jpg",
-                          "video_url": "https://example.com/video.mp4",  // Optional, for video resources
-                          "resource_url": "https://example.com/resource",  // Link to full resource
-                          "type": "video",  // "video", "course", or "certificate"
-                          "category": "Technical",
-                          "duration": "10:30",  // Optional, for videos
-                          "created_at": "2024-01-15T10:00:00Z"
-                      },
-                      ...
-                  ],
-                  "total": 50,
-                  "page": 1,
-                  "per_page": 20
-              }
-              
-           2. GET /api/resources/{resourceId}
-              Description: Fetch detailed information for a specific resource
-              Authentication: Required (JWT token in session)
-              Response Format:
-              {
-                  "success": true,
-                  "resource": {
-                      "id": 1,
-                      "title": "Resource Title",
-                      "description": "Full description of the resource",
-                      "thumbnail_url": "https://example.com/thumbnail.jpg",
-                      "video_url": "https://example.com/video.mp4",
-                      "resource_url": "https://example.com/resource",
-                      "type": "video",
-                      "category": "Technical",
-                      "duration": "10:30",
-                      "content": "Full content or transcript",
-                      "created_at": "2024-01-15T10:00:00Z",
-                      "views": 1250,
-                      "rating": 4.5
-                  }
-              }
-              
-           3. POST /api/resources/{resourceId}/view
-              Description: Track resource view/access
-              Authentication: Required (JWT token in session)
-              Request Body: {}
-              Response Format:
-              {
-                  "success": true,
-                  "message": "View tracked successfully"
-              }
-              
-           4. GET /api/resources/categories
-              Description: Fetch list of available resource categories
-              Authentication: Required (JWT token in session)
-              Response Format:
-              {
-                  "success": true,
-                  "categories": [
-                      "Technical",
-                      "Behavioral",
-                      "System Design",
-                      "Resume Tips",
-                      ...
-                  ]
-              }
-        */
-
-        // Mobile menu toggle functionality
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('active');
         }
 
-        // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
             const menuToggle = document.querySelector('.mobile-menu-toggle');
@@ -523,218 +819,266 @@
             }
         });
 
-        /* ============================================
-           LOAD RESOURCES FROM BACKEND
-           ============================================ */
         document.addEventListener('DOMContentLoaded', function() {
-            // Load resources from backend
-            // Backend Endpoint: GET /api/resources
-            loadResources();
+            loadCategorizedResources();
         });
 
-        // Function to load resources from backend
-        function loadResources() {
-            // Uncomment and implement when backend endpoint is ready:
-            /*
-            fetch('/api/resources', {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json'
+        async function loadCategorizedResources() {
+            try {
+                const categoriesResponse = await fetch('/api/resources/user-categories', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!categoriesResponse.ok) {
+                    throw new Error('Failed to fetch categories');
                 }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                
+                const categoriesData = await categoriesResponse.json();
+                
+                if (!categoriesData.success || !categoriesData.categories || categoriesData.categories.length === 0) {
+                    showNoResourcesMessage('No job categories detected yet. Please upload your resume and job description first.');
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.resources) {
-                    renderResources(data.resources);
+                
+                console.log('📋 Detected categories:', categoriesData.categories);
+                
+                const resourcesResponse = await fetch('/api/resources/categorized', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        categories: categoriesData.categories
+                    })
+                });
+                
+                if (!resourcesResponse.ok) {
+                    throw new Error('Failed to fetch resources');
+                }
+                
+                const resourcesData = await resourcesResponse.json();
+                
+                if (resourcesData.success && resourcesData.resources) {
+                    renderCategorizedResources(resourcesData.resources);
                 } else {
-                    console.error('Failed to load resources:', data.message || 'Unknown error');
-                    showErrorMessage('Failed to load resources. Please try again later.');
+                    showNoResourcesMessage('Failed to load resources. Please try again later.');
                 }
-            })
-            .catch(error => {
-                console.error('Error loading resources:', error);
-                showErrorMessage('Error loading resources. Please check your connection.');
-            });
-            */
-
-            // For now, show placeholder message
-            showPlaceholderResources();
+                
+            } catch (error) {
+                console.error('❌ Error loading categorized resources:', error);
+                showNoResourcesMessage('Error loading resources. Please check your connection.');
+            }
         }
 
-        // Function to render resources dynamically
-        function renderResources(resources) {
+        function renderCategorizedResources(resourcesData) {
             const resourcesGrid = document.getElementById('resources-grid');
             resourcesGrid.innerHTML = '';
             
-            if (resources.length === 0) {
-                resourcesGrid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1 / -1;">No resources available at the moment.</p>';
+            const hasResources = Object.keys(resourcesData).some(category => {
+                const resource = resourcesData[category];
+                return (resource.courses && resource.courses.length > 0) ||
+                       (resource.certifications && resource.certifications.length > 0) ||
+                       (resource.projects && resource.projects.length > 0);
+            });
+            
+            if (!hasResources) {
+                showNoResourcesMessage('No resources available for your detected categories.');
                 return;
             }
             
-            resources.forEach(resource => {
-                const tile = createResourceTile(resource);
-                resourcesGrid.appendChild(tile);
+            Object.keys(resourcesData).forEach(category => {
+                const resource = resourcesData[category];
+                const categoryTile = createCategoryAccordion(category, resource);
+                resourcesGrid.appendChild(categoryTile);
             });
         }
 
-        // Function to create a resource tile element
-        function createResourceTile(resource) {
-            const tile = document.createElement('div');
-            tile.className = 'resource-tile';
-            tile.dataset.resourceId = resource.id;
-            tile.dataset.resourceType = resource.type || 'course';
+        function createCategoryAccordion(category, resource) {
+            const accordion = document.createElement('div');
+            accordion.className = 'category-accordion';
             
-            // Determine thumbnail content
-            let thumbnailContent = '';
-            if (resource.thumbnail_url) {
-                thumbnailContent = `<img src="${resource.thumbnail_url}" alt="${resource.title}" onerror="this.parentElement.innerHTML='<div class=\\'thumbnail-placeholder\\'>📹</div>'">`;
-            } else if (resource.video_url) {
-                thumbnailContent = `<video src="${resource.video_url}" preload="metadata"></video>`;
-            } else {
-                thumbnailContent = '<div class="thumbnail-placeholder">📚</div>';
-            }
+            const coursesCount = resource.courses ? resource.courses.length : 0;
+            const certificationsCount = resource.certifications ? resource.certifications.length : 0;
+            const projectsCount = resource.projects ? resource.projects.length : 0;
+            const totalCount = coursesCount + certificationsCount + projectsCount;
             
-            // Add play overlay for videos
-            const playOverlay = resource.type === 'video' || resource.video_url 
-                ? '<div class="play-overlay">▶</div>' 
-                : '';
-            
-            tile.innerHTML = `
-                <div class="tile-thumbnail">
-                    ${thumbnailContent}
-                    ${playOverlay}
+            accordion.innerHTML = `
+                <div class="category-header" onclick="toggleCategory(this)">
+                    <div class="category-header-content">
+                        <div class="category-icon-wrapper">${getCategoryIcon(category)}</div>
+                        <div class="category-info">
+                            <h3 class="category-name">${escapeHtml(category)}</h3>
+                            <div class="category-stats">
+                                ${coursesCount > 0 ? `<span class="stat-badge"><span class="icon">📚</span>${coursesCount} Courses</span>` : ''}
+                                ${certificationsCount > 0 ? `<span class="stat-badge"><span class="icon">🎓</span>${certificationsCount} Certifications</span>` : ''}
+                                ${projectsCount > 0 ? `<span class="stat-badge"><span class="icon">💼</span>${projectsCount} Projects</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expand-indicator">▼</div>
                 </div>
-                <div class="tile-content">
-                    <h3 class="tile-title">${escapeHtml(resource.title || 'Untitled Resource')}</h3>
-                    <p class="tile-description">${escapeHtml(resource.description || 'No description available.')}</p>
-                    <div class="tile-meta">
-                        ${resource.category ? `<span class="tile-category">${escapeHtml(resource.category)}</span>` : ''}
-                        ${resource.duration ? `<span>⏱ ${escapeHtml(resource.duration)}</span>` : ''}
-                        ${resource.type ? `<span>📌 ${escapeHtml(resource.type)}</span>` : ''}
+                <div class="category-body">
+                    <div class="category-content">
+                        ${createResourceTabs(resource, category)}
                     </div>
                 </div>
             `;
             
-            // Add click handler
-            tile.addEventListener('click', function() {
-                handleResourceClick(resource);
-            });
-            
-            return tile;
+            return accordion;
         }
 
-        // Function to handle resource tile click
-        function handleResourceClick(resource) {
-            // Track view in backend
-            // Backend Endpoint: POST /api/resources/{resourceId}/view
-            /*
-            fetch(`/api/resources/${resource.id}/view`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .catch(error => {
-                console.error('Error tracking view:', error);
-            });
-            */
+        function createResourceTabs(resource, category) {
+            const coursesCount = resource.courses ? resource.courses.length : 0;
+            const certificationsCount = resource.certifications ? resource.certifications.length : 0;
+            const projectsCount = resource.projects ? resource.projects.length : 0;
             
-            // Navigate to resource
-            if (resource.resource_url) {
-                window.open(resource.resource_url, '_blank');
-            } else if (resource.video_url) {
-                // Could open in modal or navigate to video player page
-                window.open(resource.video_url, '_blank');
-            } else {
-                // Fetch full resource details
-                // Backend Endpoint: GET /api/resources/{resourceId}
-                /*
-                fetch(`/api/resources/${resource.id}`, {
-                    method: 'GET',
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Handle resource details display (modal, new page, etc.)
-                        console.log('Resource details:', data.resource);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching resource details:', error);
-                });
-                */
+            let html = '<div class="resource-tabs">';
+            
+            if (coursesCount > 0) {
+                html += `<button class="tab-button active" onclick="switchTab(this, 'courses-${category}')">Courses<span class="tab-count">${coursesCount}</span></button>`;
             }
-        }
-
-        // Function to show placeholder resources (for development/testing)
-        function showPlaceholderResources() {
-            const placeholderResources = [
-                {
-                    id: 1,
-                    title: "Technical Interview Mastery",
-                    description: "Master data structures, algorithms, and system design concepts. Perfect for software engineering interviews.",
-                    type: "course",
-                    category: "Technical"
-                },
-                {
-                    id: 2,
-                    title: "Behavioral Interview Prep",
-                    description: "Learn to craft compelling stories using the STAR method. Practice answering common behavioral questions.",
-                    type: "video",
-                    category: "Behavioral"
-                },
-                {
-                    id: 3,
-                    title: "System Design Fundamentals",
-                    description: "Understand how to design scalable systems. Cover load balancing, databases, caching, and distributed systems.",
-                    type: "course",
-                    category: "Technical"
-                },
-                {
-                    id: 4,
-                    title: "Resume Optimization Guide",
-                    description: "Create a standout resume that gets you noticed. Learn formatting, keyword optimization, and achievement highlighting.",
-                    type: "video",
-                    category: "Career"
-                },
-                {
-                    id: 5,
-                    title: "Problem-Solving Strategies",
-                    description: "Develop your problem-solving approach. Learn techniques for breaking down complex problems and communicating solutions.",
-                    type: "course",
-                    category: "Technical"
-                },
-                {
-                    id: 6,
-                    title: "Communication & Presentation",
-                    description: "Improve your verbal communication skills. Practice clear explanations, active listening, and professional presentation.",
-                    type: "video",
-                    category: "Soft Skills"
-                }
-            ];
+            if (certificationsCount > 0) {
+                html += `<button class="tab-button ${coursesCount === 0 ? 'active' : ''}" onclick="switchTab(this, 'certifications-${category}')">Certifications<span class="tab-count">${certificationsCount}</span></button>`;
+            }
+            if (projectsCount > 0) {
+                html += `<button class="tab-button ${coursesCount === 0 && certificationsCount === 0 ? 'active' : ''}" onclick="switchTab(this, 'projects-${category}')">Projects<span class="tab-count">${projectsCount}</span></button>`;
+            }
             
-            renderResources(placeholderResources);
+            html += '</div>';
+            
+            // Courses List
+            if (coursesCount > 0) {
+                html += `<div class="resource-list active" id="courses-${category}">`;
+                resource.courses.forEach(course => {
+                    html += `
+                        <div class="resource-card">
+                            <a href="${escapeHtml(course.link)}" target="_blank" rel="noopener noreferrer" class="resource-link">
+                                <div class="resource-icon">📚</div>
+                                <div class="resource-details">
+                                    <h4 class="resource-title">${escapeHtml(course.title)}</h4>
+                                    <p class="resource-description">Comprehensive course to master ${escapeHtml(category)} skills</p>
+                                    <div class="resource-meta">
+                                        <span>🔗 External Link</span>
+                                    </div>
+                                </div>
+                                <span class="external-link-icon">↗</span>
+                            </a>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Certifications List
+            if (certificationsCount > 0) {
+                html += `<div class="resource-list ${coursesCount === 0 ? 'active' : ''}" id="certifications-${category}">`;
+                resource.certifications.forEach(cert => {
+                    html += `
+                        <div class="resource-card">
+                            <a href="${escapeHtml(cert.link)}" target="_blank" rel="noopener noreferrer" class="resource-link">
+                                <div class="resource-icon">🎓</div>
+                                <div class="resource-details">
+                                    <h4 class="resource-title">${escapeHtml(cert.title)}</h4>
+                                    <p class="resource-description">Professional certification to validate your expertise</p>
+                                    <div class="resource-meta">
+                                        <span>🏆 Certification</span>
+                                        <span>🔗 External Link</span>
+                                    </div>
+                                </div>
+                                <span class="external-link-icon">↗</span>
+                            </a>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Projects List
+            if (projectsCount > 0) {
+                html += `<div class="resource-list ${coursesCount === 0 && certificationsCount === 0 ? 'active' : ''}" id="projects-${category}">`;
+                resource.projects.forEach(project => {
+                    html += `
+                        <div class="resource-card project-card">
+                            <div class="resource-link">
+                                <div class="resource-icon">💼</div>
+                                <div class="resource-details">
+                                    <div class="project-objective">${escapeHtml(project.objective)}</div>
+                                    <h4 class="resource-title">${escapeHtml(project.title)}</h4>
+                                    <p class="resource-description">${escapeHtml(project.description)}</p>
+                                    <div class="resource-meta">
+                                        <span>📂 Hands-on Project</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            return html;
         }
 
-        // Utility function to escape HTML
+        function toggleCategory(header) {
+            const accordion = header.parentElement;
+            const body = accordion.querySelector('.category-body');
+            
+            header.classList.toggle('active');
+            body.classList.toggle('active');
+        }
+
+        function switchTab(button, tabId) {
+            const category = button.closest('.category-content');
+            const tabs = category.querySelectorAll('.tab-button');
+            const lists = category.querySelectorAll('.resource-list');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            lists.forEach(list => list.classList.remove('active'));
+            
+            button.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'DevOps': '⚙️',
+                'Social Media Marketing': '📱',
+                'VAPT': '🔒',
+                'Biotech': '🧬',
+                'SOC': '🛡️',
+                'AI': '🤖',
+                'Accounting': '💰',
+                'Software Engineering': '💻',
+                'Data Science': '📊',
+                'Cloud Computing': '☁️',
+                'Cybersecurity': '🔐',
+                'Machine Learning': '🧠',
+                'Web Development': '🌐',
+                'Mobile Development': '📱'
+            };
+            return icons[category] || '📚';
+        }
+
+        function showNoResourcesMessage(message) {
+            const resourcesGrid = document.getElementById('resources-grid');
+            resourcesGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <p class="empty-state-text">${escapeHtml(message)}</p>
+                    <a href="/home" class="empty-state-button">Go to Dashboard</a>
+                </div>
+            `;
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        // Function to show error message
-        function showErrorMessage(message) {
-            const resourcesGrid = document.getElementById('resources-grid');
-            resourcesGrid.innerHTML = `<p style="color: white; text-align: center; grid-column: 1 / -1; padding: 40px; font-size: 18px;">${escapeHtml(message)}</p>`;
         }
     </script>
 </body>

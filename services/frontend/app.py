@@ -480,6 +480,77 @@ def resources():
     return render_template('resources.html', user=user_response.get('user', {}))
 
 
+@app.route('/api/resources/user-categories', methods=['GET'])
+@login_required
+def get_user_categories():
+    """Get user's detected job categories"""
+    try:
+        token = get_user_token()
+        
+        # Fetch categories from login-management service
+        response = service_client.get(
+            'login-management',
+            '/api/users/categories',
+            user_token=token
+        )
+        
+        if response and 'categories' in response:
+            return jsonify({
+                'success': True,
+                'categories': response['categories']
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to fetch categories'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/resources/categorized', methods=['POST'])
+@login_required
+def get_categorized_resources():
+    """Fetch resources for specified categories from resources service"""
+    try:
+        token = get_user_token()
+        data = request.get_json()
+        
+        categories = data.get('categories', [])
+        
+        if not categories:
+            return jsonify({
+                'success': False,
+                'error': 'No categories provided'
+            }), 400
+        
+        # Forward request to resources microservice
+        response = service_client.post(
+            'resources',
+            '/resources/by-categories',
+            {'categories': categories},
+            user_token=token
+        )
+        
+        if response and response.get('success'):
+            return jsonify(response), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to fetch resources'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/delete-account', methods=['GET'])
 @login_required
 def delete_account_page():

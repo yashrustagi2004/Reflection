@@ -108,6 +108,84 @@ def list_categories():
     category_names = [r["_id"] for r in resources]
     return jsonify({"resources": category_names})
 
+
+# ==================== Get Resources by Categories ====================
+@app.route('/resources/by-categories', methods=['POST'])
+@auth_middleware.require_auth
+def get_resources_by_categories():
+    """
+    Fetch resources for multiple job categories
+    Request body should contain: {"categories": ["DevOps", "AI", "SOC"]}
+    Returns resources for each requested category
+    """
+    try:
+        data = request.get_json()
+        categories = data.get('categories', [])
+        
+        if not categories:
+            return jsonify({
+                'success': False,
+                'error': 'No categories provided'
+            }), 400
+        
+        # Validate categories is a list
+        if not isinstance(categories, list):
+            return jsonify({
+                'success': False,
+                'error': 'Categories must be an array'
+            }), 400
+        
+        # Sanitize category names to prevent injection
+        sanitized_categories = [str(cat).strip() for cat in categories if cat]
+        
+        if not sanitized_categories:
+            return jsonify({
+                'success': False,
+                'error': 'No valid categories provided'
+            }), 400
+        
+        # Query MongoDB for all requested categories
+        resources_data = {}
+        for category in sanitized_categories:
+            try:
+                resource = resources_collection.find_one(
+                    {"_id": category},
+                    {"_id": 0}  # Exclude MongoDB _id field
+                )
+                
+                if resource:
+                    resources_data[category] = resource
+                    print(f"[RESOURCES] ✅ Found resources for category: {category}")
+                else:
+                    resources_data[category] = {
+                        "courses": [],
+                        "certifications": [],
+                        "projects": []
+                    }
+                    print(f"[RESOURCES] ⚠️ No resources found for category: {category}")
+                    
+            except Exception as e:
+                print(f"[RESOURCES] ❌ Error fetching category {category}: {e}")
+                resources_data[category] = {
+                    "courses": [],
+                    "certifications": [],
+                    "projects": []
+                }
+        
+        return jsonify({
+            'success': True,
+            'resources': resources_data,
+            'categories_count': len(sanitized_categories)
+        }), 200
+        
+    except Exception as e:
+        print(f"[RESOURCES] ❌ Error in get_resources_by_categories: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 # ==================== Main App Runner ====================
 if __name__ == '__main__':
     port = int(os.getenv('RESOURCES_PORT', 5005))
