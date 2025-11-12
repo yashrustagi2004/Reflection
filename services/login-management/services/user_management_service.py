@@ -83,7 +83,7 @@ class UserManagementService:
         """
         safe_fields = [
             '_id', 'email', 'name', 'avatar_url', 'provider',
-            'created_at', 'last_login', 'settings', 'uploads'
+            'created_at', 'last_login', 'uploads'
         ]
         
         return {k: v for k, v in user.items() if k in safe_fields}

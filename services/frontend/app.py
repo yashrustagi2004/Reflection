@@ -294,7 +294,8 @@ def dashboard():
     # Get upload requirements
     requirements_response = service_client.get(
         'file-parsing',
-        '/api/files/requirements'
+        '/api/files/requirements',
+        user_token=token
     )
     
     return render_template(
@@ -436,23 +437,24 @@ def profile():
     token = get_user_token()
     
     if request.method == 'POST':
-        # Update profile settings
-        settings = {
-            'theme': request.form.get('theme', 'light'),
-            'notifications': request.form.get('notifications') == 'on',
-            'data_sharing': request.form.get('data_sharing') == 'on'
-        }
+        # Update profile name/avatar only
+        update_data = {}
+        if request.form.get('name'):
+            update_data['name'] = request.form.get('name')
+        if request.form.get('avatar_url'):
+            update_data['avatar_url'] = request.form.get('avatar_url')
         
-        update_response = service_client.put(
-            'login-management',
-            '/api/users/profile',
-            {'settings': settings},
-            user_token=token
-        )
-        
-        if update_response.get('success'):
-            # Redirect to profile with success message
-            return redirect(url_for('profile', updated='true'))
+        if update_data:
+            update_response = service_client.put(
+                'login-management',
+                '/api/users/profile',
+                update_data,
+                user_token=token
+            )
+            
+            if update_response.get('success'):
+                # Redirect to profile with success message
+                return redirect(url_for('profile', updated='true'))
     
     # Get user profile
     response = service_client.get(

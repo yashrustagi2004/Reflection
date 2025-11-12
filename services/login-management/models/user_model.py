@@ -47,11 +47,6 @@ class UserModel:
                 "updated_at": datetime.now(timezone.utc),
                 "last_login": datetime.now(timezone.utc),
                 "is_active": True,
-                "settings": {
-                    "notifications": True,
-                    "data_sharing": True,
-                    "theme": "light"
-                },
                 "uploads": {
                     "resumes": [],
                     "job_descriptions": []

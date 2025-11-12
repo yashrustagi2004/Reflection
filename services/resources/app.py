@@ -43,6 +43,7 @@ def health_check():
 
 # ==================== Resource Endpoint ====================
 @app.route('/resources', methods=['GET'])
+@auth_middleware.require_auth
 def get_resource():
     """
     Returns requested parts of a resource category.
@@ -54,22 +55,12 @@ def get_resource():
         - projects=1 → include projects
     If no query params are provided, return the entire category.
     """
-    # 1️⃣ Authenticate request using JWT
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
-
-    token = auth_header.split("Bearer ")[-1]  # Extract JWT
-    user = auth_middleware.verify_token(token)
-    if not user:
-        return jsonify({"error": "Invalid or expired token"}), 401
-
-    # 2️⃣ Get category ID from headers
+    # Get category ID from headers
     category = request.headers.get('Resource-ID')
     if not category:
         return jsonify({"error": "Missing Resource-ID in headers"}), 400
 
-    # 3️⃣ Map query params to MongoDB projection
+    # Map query params to MongoDB projection
     projection = {}
     if 'courses' in request.args:
         projection['courses'] = 1
@@ -92,17 +83,9 @@ def get_resource():
 
 # ==================== List All Categories ====================
 @app.route('/categories', methods=['GET'])
+@auth_middleware.require_auth
 def list_categories():
     """Return all available resource categories (authenticated)"""
-    # Authenticate request
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
-
-    token = auth_header.split("Bearer ")[-1]
-    user = auth_middleware.verify_token(token)
-    if not user:
-        return jsonify({"error": "Invalid or expired token"}), 401
 
     resources = list(resources_collection.find({}, {"_id": 1}))
     category_names = [r["_id"] for r in resources]

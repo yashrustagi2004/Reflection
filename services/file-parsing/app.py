@@ -140,6 +140,7 @@ def debug_request_headers():
 # ==================== File Upload ====================
 
 @app.route('/api/files/upload/resume', methods=['POST'])
+@auth_middleware.require_auth
 def upload_resume():
     """
     Upload and validate resume file, trigger question generation if JD exists
@@ -369,6 +370,7 @@ def upload_resume():
 
 
 @app.route('/api/files/upload/job-description', methods=['POST'])
+@auth_middleware.require_auth
 def upload_job_description():
     """
     Upload and validate job description file
@@ -466,6 +468,7 @@ def upload_job_description():
 
 
 @app.route('/api/files/text/job-description', methods=['POST'])
+@auth_middleware.require_auth
 def save_text_job_description():
     """
     Save text-based job description and trigger question generation if resume exists
@@ -639,6 +642,7 @@ def save_text_job_description():
 # (make sure `requests` is imported)
 
 @app.route('/api/upload/submit', methods=['POST'])
+@auth_middleware.require_auth
 def submit_resume_and_jd():
     """
     Combined endpoint to submit both resume and job description
@@ -929,6 +933,7 @@ def submit_resume_and_jd():
 # ==================== File Upload Requirements ====================
 
 @app.route('/api/files/requirements', methods=['GET'])
+@auth_middleware.require_auth
 def get_upload_requirements():
     """Get file upload requirements and constraints"""
     return jsonify({
@@ -938,6 +943,7 @@ def get_upload_requirements():
 
 
 @app.route('/api/files/parsed-content', methods=['GET'])
+@auth_middleware.require_auth
 def get_parsed_content():
     """
     Get the stored parsed content for resume and job description
@@ -972,6 +978,7 @@ def get_parsed_content():
 
 
 @app.route('/api/files/clear-content', methods=['POST'])
+@auth_middleware.require_auth
 def clear_parsed_content():
     """
     Clear all stored parsed content
@@ -1001,6 +1008,7 @@ def clear_parsed_content():
 
 
 @app.route('/api/files/content-status', methods=['GET'])
+@auth_middleware.require_auth
 def get_content_status():
     """
     Get status of what content is currently stored
@@ -1030,6 +1038,7 @@ def get_content_status():
         }), 500
 
 @app.route('/api/questions', methods=['GET'])
+@auth_middleware.require_auth
 def get_questions():
     """
     Get questions for the authenticated user from QA service.

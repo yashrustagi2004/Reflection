@@ -253,7 +253,7 @@ def update_profile():
         data = request.get_json()
         
         # Validate input
-        allowed_fields = ['name', 'avatar_url', 'settings']
+        allowed_fields = ['name', 'avatar_url']
         update_data = {k: v for k, v in data.items() if k in allowed_fields}
         
         if not update_data:
