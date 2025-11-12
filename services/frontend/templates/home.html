@@ -1192,7 +1192,7 @@
                 jdUploadBtn.style.opacity = '0.5';
                 writeJdBtn.style.opacity = '0.5';
                 
-                showMessage('resume-message', 'Processing resume... Job description upload will be available after completion.', 'info');
+                // showMessage('resume-message', 'Processing resume... Job description upload will be available after completion.', 'info');
             } 
             // Resume processing complete - re-enable JD uploads
             else if (processingState.resumeProcessed && !processingState.resumeProcessing) {
@@ -1240,30 +1240,13 @@
             .then(data => {
                 if (data.success) {
                     if (type === 'resume') {
-                        processingState.resumeProcessing = false;
-                        processingState.resumeProcessed = true;
-                        updateProcessingState();
-                        
-                        // Clear any existing messages
-                        document.getElementById('resume-message').textContent = '';
-                        document.getElementById('resume-message').className = 'message';
-                        
-                        // Hide resume submit button after successful processing
-                        button.style.display = 'none';
-                        
-                        // Re-enable upload options after successful processing
+                        // Keep processing message visible during reload
+                        // Add small delay to ensure message stays visible
                         setTimeout(() => {
-                            // Reset all states to allow new uploads
                             uploadedFiles.resume = null;
                             uploadedFiles.jd = null;
-                            document.getElementById('resume-file').value = '';
-                            document.getElementById('resume-file-info').style.display = 'none';
-                            processingState.resumeProcessed = false;
-                            updateProcessingState();
-                            
-                            // Refresh the page directly without showing additional messages
                             window.location.reload();
-                        }, 1500);
+                        }, 300);  // Small delay to keep message visible
                     } else {
                         showMessage(`${type}-message`, data.message || 'File processed successfully!', 'success');
                     }
@@ -1273,6 +1256,9 @@
                         updateProcessingState();
                     }
                     showMessage(`${type}-message`, data.error || 'Processing failed', 'error');
+                    // Reset button on error
+                    button.innerHTML = originalText;
+                    button.disabled = false;
                 }
             })
             .catch(error => {
@@ -1282,8 +1268,7 @@
                     updateProcessingState();
                 }
                 showMessage(`${type}-message`, 'Network error occurred', 'error');
-            })
-            .finally(() => {
+                // Reset button on error
                 button.innerHTML = originalText;
                 button.disabled = false;
             });
