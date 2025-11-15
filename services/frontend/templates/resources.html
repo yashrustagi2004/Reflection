@@ -1070,7 +1070,7 @@
                 <div class="empty-state">
                     <div class="empty-state-icon">📚</div>
                     <p class="empty-state-text">${escapeHtml(message)}</p>
-                    <a href="/home" class="empty-state-button">Go to Dashboard</a>
+                    <a href="{{ url_for('dashboard') }}" class="empty-state-button">Go to Dashboard</a>
                 </div>
             `;
         }
