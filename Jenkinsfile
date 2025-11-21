@@ -143,10 +143,11 @@
       success {
         echo "Pipeline finished successfully. Services changed: ${env.CHANGED_SERVICES ?: 'none'}"
         script {
-          // Restart port-forwards to ensure services are accessible
+          // Restart port-forwards as the local user (not Jenkins)
           sh '''
-            echo "Restarting port-forwards..."
-            bash ./start-ingress.sh || echo "Port-forward script failed, but continuing..."
+            echo "Restarting port-forwards for local user..."
+            # Run as your user via sudo (no password needed for this specific command)
+            sudo -u lightning bash -c "cd /home/lightning/Desktop/Study/7th_sem/capstone2/Reflection/Reflection && ./start-ingress.sh" || echo "Port-forward restart failed, run './start-ingress.sh' manually"
           '''
         }
       }
