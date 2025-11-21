@@ -86,12 +86,9 @@ pipeline {
         script {
           // Prepare an array
           def services = env.CHANGED_SERVICES.tokenize(',')
-          // Only need kubeconfig, no Docker registry push required for local deployment
-          withCredentials([
-            file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')
-          ]) {
-            // Loop per service
-            for (svc in services) {
+          
+          // Loop per service - kubectl will use Jenkins user's default kubeconfig
+          for (svc in services) {
               if (!svc) { continue }
               def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
               def dockerfileDir = "services/${svc}"
@@ -119,16 +116,14 @@ pipeline {
                     }
                     print
                   }' ${k8sManifest} > \$tmp
-                  # Apply the temporary manifest against the cluster using the provided kubeconfig
-                  kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f \$tmp -n ${env.NAMESPACE}
+                  # Apply the temporary manifest - kubectl will use Jenkins user's kubeconfig
+                  kubectl apply -f \$tmp -n ${env.NAMESPACE}
                   rm -f \$tmp
-                  # Wait for rollout to complete (use the deployment name == svc-deployment convention)
-                  kubectl --kubeconfig=\$KUBECONFIG_FILE rollout status deployment/${svc}-deployment -n ${env.NAMESPACE} --timeout=120s || true
+                  # Wait for rollout to complete
+                  kubectl rollout status deployment/${svc}-deployment -n ${env.NAMESPACE} --timeout=120s || true
                 """
               }
             } // end for
-
-          } // end withCredentials
         } // end script
       } // end steps
     } // end stage
