@@ -34,9 +34,9 @@ pipeline {
     stage('Detect changed services') {
       steps {
         script {
-          // Compute changed files relative to TARGET_BRANCH
-          def target = params.TARGET_BRANCH ?: 'origin/refactorCodeBase'
-          def changed = sh(script: "git diff --name-only ${target}...HEAD || true", returnStdout: true).trim()
+          // Compute changed files relative to previous commit
+          // Use HEAD~1 to compare with previous commit
+          def changed = sh(script: "git diff --name-only HEAD~1 HEAD || true", returnStdout: true).trim()
           echo "Changed files:\n${changed}"
 
           // Configure path->service mapping
