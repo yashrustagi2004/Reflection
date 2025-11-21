@@ -1,19 +1,22 @@
-# Question-Answer Generation Service Dependencies
 -r ../shared/requirements.txt
 
+# Database
+pymongo
+
 # AI/ML Libraries
-langchain==1.0.3
-langchain-google-genai==2.1.12
-langchain-pinecone==0.2.12
-langchain-core == 1.0.3
-langchain-huggingface == 1.0.1
-pydantic = 2.11.7
-google-ai-generativelanguage==0.9.0
+langchain
+langchain-google-genai
+langchain-pinecone
+langchain-core
+langchain-huggingface
+pydantic
+google-ai-generativelanguage
 
 # Vector Database
-pinecone==7.3.0
+pinecone
 
 # Embeddings
 sentence-transformers==2.2.2
 
+# Web Framework
 fastapi

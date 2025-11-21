@@ -1,0 +1,154 @@
+---
+# ==========================================
+# Speech-to-Text Service - Deployment & Service
+# ==========================================
+# Audio transcription using Google Speech Recognition and FFmpeg
+# Port: 5004, Internal ClusterIP
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: speechtotext-deployment
+  namespace: reflection
+  labels:
+    app: speechtotext
+    tier: backend
+    version: v1
+spec:
+  replicas: 1  # Handle concurrent audio processing
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: speechtotext
+  template:
+    metadata:
+      labels:
+        app: speechtotext
+        tier: backend
+        version: v1
+    spec:
+      # Security Context for Pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: speechtotext
+        image: reflection/speechtotext:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 5004
+          protocol: TCP
+        
+        # Environment variables
+        envFrom:
+        - configMapRef:
+            name: reflection-config
+        - secretRef:
+            name: reflection-secrets
+        
+        env:
+        - name: SERVICE_NAME
+          value: "speechtotext"
+        - name: PORT
+          value: "5004"
+        - name: TEMP_FOLDER
+          value: "/app/temp"
+        
+        # Resource limits (audio processing is CPU intensive)
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        # Volume mounts for temporary audio files
+        volumeMounts:
+        - name: temp-storage
+          mountPath: /app/temp
+        
+        # Security Context for Container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # FFmpeg needs temp files
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Liveness Probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness Probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # Startup Probe
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5004
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 20
+      
+      # Volumes
+      volumes:
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 2Gi  # Limit temp storage
+          medium: Memory  # Use memory for faster I/O
+      
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+      terminationGracePeriodSeconds: 60  # Allow time for audio processing
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: speechtotext-service
+  namespace: reflection
+  labels:
+    app: speechtotext
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: speechtotext
+  ports:
+  - name: http
+    port: 5004
+    targetPort: 5004
+    protocol: TCP
+  sessionAffinity: None

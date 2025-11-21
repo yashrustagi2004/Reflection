@@ -1,0 +1,140 @@
+---
+# ==========================================
+# QA Generation Service - Deployment & Service
+# ==========================================
+# AI-powered question generation using Google Gemini and Pinecone
+# Port: 5003, Internal ClusterIP
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qa-generation-deployment
+  namespace: reflection
+  labels:
+    app: qa-generation
+    tier: backend
+    version: v1
+spec:
+  replicas: 1  # Reduced to 1 due to memory constraints and large ML models
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: qa-generation
+  template:
+    metadata:
+      labels:
+        app: qa-generation
+        tier: backend
+        version: v1
+    spec:
+      # Security Context for Pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: qa-generation
+        image: reflection/qa-generation:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 5003
+          protocol: TCP
+        
+        # Environment variables
+        envFrom:
+        - configMapRef:
+            name: reflection-config
+        - secretRef:
+            name: reflection-secrets
+        
+        env:
+        - name: SERVICE_NAME
+          value: "qa-generation"
+        - name: PORT
+          value: "5003"
+        
+        # Resource limits (higher for AI/ML workloads)
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "750m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        
+        # Security Context for Container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # ML models need cache
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Liveness Probe (longer timeout for AI operations)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness Probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # Startup Probe (ML models take time to load)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5003
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30  # 5 minutes max startup time
+      
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+      terminationGracePeriodSeconds: 90  # Allow time for AI operations to complete
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qa-generation-service
+  namespace: reflection
+  labels:
+    app: qa-generation
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: qa-generation
+  ports:
+  - name: http
+    port: 5003
+    targetPort: 5003
+    protocol: TCP
+  sessionAffinity: None

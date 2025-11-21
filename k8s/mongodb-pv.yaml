@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain  # IMPORTANT: Prevents data loss on restart
+  hostPath:
+    path: "/opt/kubernetes-data/mongodb"
+    type: DirectoryOrCreate
+  storageClassName: standard

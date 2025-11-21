@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reflection-config
+  namespace: reflection
+data:
+  # Database Configuration
+  DATABASE_NAME: "Reflection"
+  MONGODB_URI: "mongodb://admin:reflectionpass123@mongodb-service:27017/Reflection?authSource=admin"
+  
+  # Service URLs (internal Kubernetes DNS)
+  FRONTEND_PORT: "5000"
+  LOGIN_MANAGEMENT_PORT: "5001"
+  LOGIN_MANAGEMENT_URL: "http://login-management-service:5001"
+  FILE_PARSING_PORT: "5002"
+  FILE_PARSING_URL: "http://file-parsing-service:5002"
+  QA_GENERATION_PORT: "5003"
+  QA_GENERATION_URL: "http://qa-generation-service:5003"
+  ANSWER_ANALYSIS_PORT: "5004"
+  ANSWER_ANALYSIS_URL: "http://speechtotext-service:5004"
+  RESOURCES_PORT: "5005"
+  RESOURCES_URL: "http://resources-service:5005"
+  
+  # Pinecone Configuration
+  PINECONE_ENVIRONMENT: "us-east-1"
+  PINECONE_INDEX_NAME: "interview-prep-assistant"
+  
+  # OAuth Redirect URIs (update with your actual domain)
+  GOOGLE_REDIRECT_URI: "http://localhost:5000/api/auth/google/callback"
+  GITHUB_REDIRECT_URI: "http://localhost:5000/api/auth/github/callback"
+  
+  # File Upload Configuration
+  UPLOAD_FOLDER: "uploads"
+  MAX_FILE_SIZE_MB: "10"
+  
+  # JWT Configuration
+  JWT_EXPIRY_HOURS: "24"
+  
+  # Flask Configuration
+  FLASK_DEBUG: "False"
+  
+  # CORS Configuration
+  ALLOWED_ORIGINS: "http://localhost:5000,http://localhost:3000"
