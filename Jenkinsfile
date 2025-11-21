@@ -142,6 +142,13 @@
     post {
       success {
         echo "Pipeline finished successfully. Services changed: ${env.CHANGED_SERVICES ?: 'none'}"
+        script {
+          // Restart port-forwards to ensure services are accessible
+          sh '''
+            echo "Restarting port-forwards..."
+            bash ./start-ingress.sh || echo "Port-forward script failed, but continuing..."
+          '''
+        }
       }
       failure {
         echo "Pipeline failed. See console logs for details."
