@@ -91,14 +91,15 @@
             for (svc in services) {
                 if (!svc) { continue }
                 def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
-                def dockerfileDir = "services/${svc}"
+                def dockerfileDir = "services"  // Build from services/ directory, not services/<svc>/
                 def k8sManifest = "k8s/deployments/${svc}.yaml"
 
                 stage("Build ${svc}") {
                   // Build the image locally (no push to registry)
+                  // Build context is services/, Dockerfile is in services/<svc>/Dockerfile
                   sh """
                     echo "Building ${svc} -> ${image}"
-                    docker build --file ${dockerfileDir}/Dockerfile -t ${image} ${dockerfileDir}
+                    docker build --file ${dockerfileDir}/${svc}/Dockerfile -t ${image} ${dockerfileDir}
                     echo "Image built successfully: ${image}"
                   """
                 }
