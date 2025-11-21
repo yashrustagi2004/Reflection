@@ -12,14 +12,11 @@ pipeline {
   }
 
   environment {
-    // Jenkins credential IDs - set these in Jenkins and update them here
-    DOCKER_CREDS = 'docker-registry-creds'      // usernamePassword
+    // Jenkins credential ID - only kubeconfig needed for local deployment
     KUBECONFIG_CRED = 'kubeconfig-file'        // file credential
     // Tag images with commit SHA so each build is immutable
     IMAGE_TAG = "${env.GIT_COMMIT ?: 'local-' + UUID.randomUUID().toString().take(8)}"
     NAMESPACE = 'reflection'
-    // Map services -> their paths and k8s manifest paths. Extend if you add services.
-    // Note: keep these in sync with your repo structure
   }
 
   stages {
