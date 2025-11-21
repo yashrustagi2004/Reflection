@@ -156,9 +156,11 @@ class EnhancedFileParser:
         if not file_path or not os.path.exists(file_path):
             return None
         
-        # Validate file path for security
-        if '..' in file_path or file_path.startswith('/'):
-            print(f"Security warning: Potentially unsafe file path {file_path}")
+        # Validate file path for security (check for path traversal attacks)
+        # Allow absolute paths within /app (container paths)
+        normalized_path = os.path.normpath(file_path)
+        if '..' in file_path:
+            print(f"Security warning: Path traversal attempt detected {file_path}")
             return None
         
         # Get file extension

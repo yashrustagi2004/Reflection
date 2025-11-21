@@ -1,8 +1,8 @@
 # ==========================================
-# Login Management Service Dockerfile
+# Frontend Service Dockerfile
 # ==========================================
-# Handles user authentication, OAuth, and user data management
-# Port: 5001
+# Serves web interface and coordinates with backend microservices
+# Port: 5000
 
 FROM python:3.11-slim
 
@@ -28,24 +28,25 @@ RUN useradd -m -u 1000 appuser && \
 COPY --chown=appuser:appuser shared/ /app/shared/
 
 # Copy requirements files
-COPY --chown=appuser:appuser login-management/requirements.txt .
+COPY --chown=appuser:appuser frontend/requirements.txt .
 
 # Install dependencies
+# First install shared, then parse requirements.txt and install service-specific packages
 RUN pip install --no-cache-dir -r shared/requirements.txt && \
     grep -v '^-r' requirements.txt | grep -v '^#' | grep -v '^$' | xargs -r pip install --no-cache-dir
 
 # Copy application code
-COPY --chown=appuser:appuser login-management/ .
+COPY --chown=appuser:appuser frontend/ .
 
 # Switch to non-root user
 USER appuser
 
 # Expose port
-EXPOSE 5001
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5001/health', timeout=5)"
+    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=5)"
 
 # Run the application
 CMD ["python", "-u", "app.py"]

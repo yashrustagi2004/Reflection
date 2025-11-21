@@ -1,0 +1,153 @@
+---
+# ==========================================
+# File Parsing Service - Deployment & Service
+# ==========================================
+# Resume/JD parsing, vectorization, Pinecone integration
+# Port: 5002, Internal ClusterIP
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-parsing-deployment
+  namespace: reflection
+  labels:
+    app: file-parsing
+    tier: backend
+    version: v1
+spec:
+  replicas: 2  # Can handle concurrent file uploads
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: file-parsing
+  template:
+    metadata:
+      labels:
+        app: file-parsing
+        tier: backend
+        version: v1
+    spec:
+      # Security Context for Pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: file-parsing
+        image: reflection/file-parsing:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 5002
+          protocol: TCP
+        
+        # Environment variables
+        envFrom:
+        - configMapRef:
+            name: reflection-config
+        - secretRef:
+            name: reflection-secrets
+        
+        env:
+        - name: SERVICE_NAME
+          value: "file-parsing"
+        - name: PORT
+          value: "5002"
+        - name: UPLOAD_FOLDER
+          value: "/app/uploads"
+        
+        # Resource limits (higher for file processing)
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        # Volume mounts for file uploads
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        
+        # Security Context for Container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Needs to write uploaded files
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Liveness Probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness Probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # Startup Probe
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 20  # Allow more time for sentence-transformers
+      
+      # Volumes
+      volumes:
+      - name: upload-storage
+        emptyDir:
+          sizeLimit: 5Gi  # Limit storage to 5GB
+      
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+      terminationGracePeriodSeconds: 60  # Allow time for file processing to complete
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-parsing-service
+  namespace: reflection
+  labels:
+    app: file-parsing
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: file-parsing
+  ports:
+  - name: http
+    port: 5002
+    targetPort: 5002
+    protocol: TCP
+  sessionAffinity: None

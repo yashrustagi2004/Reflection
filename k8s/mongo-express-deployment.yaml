@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+  namespace: reflection
+  labels:
+    app: mongo-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-express
+  template:
+    metadata:
+      labels:
+        app: mongo-express
+    spec:
+      containers:
+      - name: mongo-express
+        image: mongo-express:1.0.2-20
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+          name: http
+        env:
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGO_INITDB_ROOT_PASSWORD
+        - name: ME_CONFIG_MONGODB_URL
+          value: "mongodb://admin:reflectionpass123@mongodb-service:27017/"
+        - name: ME_CONFIG_MONGODB_SERVER
+          value: "mongodb-service"
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          value: "admin"
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          value: "admin123"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express-service
+  namespace: reflection
+  labels:
+    app: mongo-express
+spec:
+  type: LoadBalancer  # Expose externally for GUI access
+  ports:
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: http
+  selector:
+    app: mongo-express

@@ -33,6 +33,9 @@ CORS(app, origins=os.getenv('ALLOWED_ORIGINS', '*').split(','))
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
 
+# Service URLs - Use Kubernetes service names in cluster, localhost for local dev
+QA_GENERATION_SERVICE_URL = os.getenv('QA_GENERATION_URL', 'http://qa-generation-service:5003')
+
 # Create upload directories
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'resumes'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'job_descriptions'), exist_ok=True)
@@ -307,7 +310,7 @@ def upload_resume():
             }
 
             qa_response = requests.post(
-                "http://127.0.0.1:5003/api/questions/generate",
+                f"{QA_GENERATION_SERVICE_URL}/api/questions/generate",
                 headers={
                     "Authorization": f"Bearer {token}",
                     "Content-Type": "application/json"
@@ -584,7 +587,7 @@ def save_text_job_description():
                 }
 
                 qa_response = requests.post(
-                    "http://127.0.0.1:5003/api/questions/generate",
+                    f"{QA_GENERATION_SERVICE_URL}/api/questions/generate",
                     headers={
                         "Authorization": f"Bearer {token}",
                         "Content-Type": "application/json"
@@ -848,7 +851,7 @@ def submit_resume_and_jd():
             }
 
             qa_response = requests.post(
-                "http://127.0.0.1:5003/api/questions/generate",
+                f"{QA_GENERATION_SERVICE_URL}/api/questions/generate",
                 headers={
                     "Authorization": f"Bearer {os.getenv('API_AUTH_TOKEN', 'my-secret-token')}",
                     "Content-Type": "application/json"
@@ -1071,7 +1074,7 @@ def get_questions():
             }), 401
         
         # Fetch questions from QA service
-        qa_service_url = f"http://127.0.0.1:5003/api/questions/user/{user_id}"
+        qa_service_url = f"{QA_GENERATION_SERVICE_URL}/api/questions/user/{user_id}"
         
         qa_response = requests.get(
             qa_service_url,
