@@ -88,7 +88,7 @@ pipeline {
           def services = env.CHANGED_SERVICES.tokenize(',')
           // Only need kubeconfig, no Docker registry push required for local deployment
           withCredentials([
-            file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG_FILE')
+            file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')
           ]) {
             // Loop per service
             for (svc in services) {
