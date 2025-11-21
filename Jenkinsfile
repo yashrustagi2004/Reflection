@@ -89,34 +89,23 @@ pipeline {
         script {
           // Prepare an array
           def services = env.CHANGED_SERVICES.tokenize(',')
-          // Retrieve registry creds and kubeconfig file at runtime (securely)
+          // Only need kubeconfig, no Docker registry push required for local deployment
           withCredentials([
-            usernamePassword(credentialsId: env.DOCKER_CREDS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
             file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG_FILE')
           ]) {
-            // Avoid leaking creds in logs
-            sh 'set +x' // turn off verbose shell printing in sh step
-
-            // docker login
-            def registry = params.REGISTRY ?: 'docker.io'
-            sh """
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin ${registry}
-            """
-
             // Loop per service
             for (svc in services) {
               if (!svc) { continue }
-              def registryPrefix = params.REGISTRY ? "${params.REGISTRY}/" : ""
-              def image = "${registryPrefix}${params.ORG}/${svc}:${env.IMAGE_TAG}"
+              def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
               def dockerfileDir = "services/${svc}"
               def k8sManifest = "k8s/deployments/${svc}.yaml"
 
               stage("Build ${svc}") {
-                // Build the image
+                // Build the image locally (no push to registry)
                 sh """
                   echo "Building ${svc} -> ${image}"
-                  docker build --pull --file ${dockerfileDir}/Dockerfile -t ${image} ${dockerfileDir}
-                  docker push ${image}
+                  docker build --file ${dockerfileDir}/Dockerfile -t ${image} ${dockerfileDir}
+                  echo "Image built successfully: ${image}"
                 """
               }
 
@@ -142,9 +131,6 @@ pipeline {
               }
             } // end for
 
-            // logout and cleanup
-            sh "docker logout ${registry} || true"
-            sh 'set -x' // restore verbose printing
           } // end withCredentials
         } // end script
       } // end steps
