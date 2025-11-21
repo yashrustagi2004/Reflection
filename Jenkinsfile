@@ -1,0 +1,174 @@
+pipeline {
+  agent any
+  options {
+    // Keep logs, limit build time
+    timeout(time: 60, unit: 'MINUTES')
+  }
+
+  parameters {
+    string(name: 'TARGET_BRANCH', defaultValue: 'origin/refactorCodeBase', description: 'Branch to diff against to detect changes (e.g., origin/main)')
+    string(name: 'REGISTRY', defaultValue: '', description: 'Docker registry (leave empty for Docker Hub, e.g., docker.io)')
+    string(name: 'ORG', defaultValue: 'reflection', description: 'Registry org/namespace')
+  }
+
+  environment {
+    // Jenkins credential IDs - set these in Jenkins and update them here
+    DOCKER_CREDS = 'docker-registry-creds'      // usernamePassword
+    KUBECONFIG_CRED = 'kubeconfig-file'        // file credential
+    // Tag images with commit SHA so each build is immutable
+    IMAGE_TAG = "${env.GIT_COMMIT ?: 'local-' + UUID.randomUUID().toString().take(8)}"
+    NAMESPACE = 'reflection'
+    // Map services -> their paths and k8s manifest paths. Extend if you add services.
+    // Note: keep these in sync with your repo structure
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        // checkout with full history (needed for git diff)
+        checkout scm
+        sh 'git fetch --all --prune'
+      }
+    }
+
+    stage('Detect changed services') {
+      steps {
+        script {
+          // Compute changed files relative to TARGET_BRANCH
+          def target = params.TARGET_BRANCH ?: 'origin/refactorCodeBase'
+          def changed = sh(script: "git diff --name-only ${target}...HEAD || true", returnStdout: true).trim()
+          echo "Changed files:\n${changed}"
+
+          // Configure path->service mapping
+          def mapping = [
+            'services/frontend'           : 'frontend',
+            'services/login-management'   : 'login-management',
+            'services/file-parsing'       : 'file-parsing',
+            'services/question-answer-generation': 'qa-generation',
+            'services/qa-generation'      : 'qa-generation',
+            'services/speechtotext'       : 'speechtotext',
+            'services/SpeechToText'       : 'speechtotext',
+            'services/resources'          : 'resources',
+            // k8s deployment files (if k8s yaml changed, redeploy corresponding service)
+            'k8s/deployments/frontend.yaml'        : 'frontend',
+            'k8s/deployments/login-management.yaml': 'login-management',
+            'k8s/deployments/file-parsing.yaml'    : 'file-parsing',
+            'k8s/deployments/qa-generation.yaml'   : 'qa-generation',
+            'k8s/deployments/speechtotext.yaml'    : 'speechtotext',
+            'k8s/deployments/resources.yaml'       : 'resources'
+          ]
+
+          // Decide changed services
+          def changedServices = [] as Set
+          if (changed) {
+            changed.split('\\n').each { f ->
+              mapping.each { path, svc ->
+                if (f.startsWith(path)) {
+                  changedServices << svc
+                }
+              }
+            }
+          }
+
+          // Expose to later stages
+          env.CHANGED_SERVICES = changedServices.join(',')
+          if (!env.CHANGED_SERVICES) {
+            echo "No service-level changes detected; pipeline will skip build/deploy stages."
+          } else {
+            echo "Services to build/deploy: ${env.CHANGED_SERVICES}"
+          }
+        }
+      }
+    }
+
+    stage('Build & Deploy changed services') {
+      when {
+        expression { return env.CHANGED_SERVICES?.trim() }
+      }
+      steps {
+        script {
+          // Prepare an array
+          def services = env.CHANGED_SERVICES.tokenize(',')
+          // Retrieve registry creds and kubeconfig file at runtime (securely)
+          withCredentials([
+            usernamePassword(credentialsId: env.DOCKER_CREDS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
+            file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG_FILE')
+          ]) {
+            // Avoid leaking creds in logs
+            sh 'set +x' // turn off verbose shell printing in sh step
+
+            // docker login
+            def registry = params.REGISTRY ?: 'docker.io'
+            sh """
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin ${registry}
+            """
+
+            // Loop per service
+            for (svc in services) {
+              if (!svc) { continue }
+              def registryPrefix = params.REGISTRY ? "${params.REGISTRY}/" : ""
+              def image = "${registryPrefix}${params.ORG}/${svc}:${env.IMAGE_TAG}"
+              def dockerfileDir = "services/${svc}"
+              def k8sManifest = "k8s/deployments/${svc}.yaml"
+
+              stage("Build ${svc}") {
+                // Build the image
+                sh """
+                  echo "Building ${svc} -> ${image}"
+                  docker build --pull --file ${dockerfileDir}/Dockerfile -t ${image} ${dockerfileDir}
+                  docker push ${image}
+                """
+              }
+
+              stage("Deploy ${svc}") {
+                // Create a temporary adjusted manifest that points to the new image and apply it
+                sh """
+                  tmp=\$(mktemp /tmp/${svc}-manifest.XXXX.yaml)
+                  # Safely replace the image line in the manifest. This is intentionally conservative:
+                  # - it finds the first 'image:' in the file and substitutes the value. Adjust if your manifest has multiple images.
+                  awk -v img="${image}" '{
+                    if (!found && match(\$0,/^[[:space:]]*image:[[:space:]]*/)) {
+                      sub(/^[[:space:]]*image:[[:space:]]*.*/, \"        image: \" img)
+                      found=1
+                    }
+                    print
+                  }' ${k8sManifest} > \$tmp
+                  # Apply the temporary manifest against the cluster using the provided kubeconfig
+                  kubectl --kubeconfig=\$KUBECONFIG_FILE apply -f \$tmp -n ${env.NAMESPACE}
+                  rm -f \$tmp
+                  # Wait for rollout to complete (use the deployment name == svc-deployment convention)
+                  kubectl --kubeconfig=\$KUBECONFIG_FILE rollout status deployment/${svc}-deployment -n ${env.NAMESPACE} --timeout=120s || true
+                """
+              }
+            } // end for
+
+            // logout and cleanup
+            sh "docker logout ${registry} || true"
+            sh 'set -x' // restore verbose printing
+          } // end withCredentials
+        } // end script
+      } // end steps
+    } // end stage
+
+    stage('Optional: Security scan') {
+      when {
+        expression { return params.SCAN == 'true' }
+      }
+      steps {
+        echo "Optional vulnerability scan stage. Configure trivy or your scanner of choice and bind its credentials securely."
+      }
+    }
+  } // end stages
+
+  post {
+    success {
+      echo "Pipeline finished successfully. Services changed: ${env.CHANGED_SERVICES ?: 'none'}"
+    }
+    failure {
+      echo "Pipeline failed. See console logs for details."
+    }
+    cleanup {
+      echo "Cleanup if required."
+    }
+  }
+}
