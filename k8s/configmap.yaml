@@ -5,7 +5,7 @@ metadata:
   namespace: reflection
 data:
   # Database Configuration
-  DATABASE_NAME: "lightning2"
+  DATABASE_NAME: "Reflection"
   MONGODB_HOST: "mongodb-service"
   MONGODB_PORT: "27017"
   MONGODB_AUTH_SOURCE: "admin"
