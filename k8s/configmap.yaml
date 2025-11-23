@@ -2,10 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: reflection-config
-  namespace: lightning2
+  namespace: reflection
 data:
   # Database Configuration
-  DATABASE_NAME: "Reflection"
+  DATABASE_NAME: "lightning2"
   MONGODB_HOST: "mongodb-service"
   MONGODB_PORT: "27017"
   MONGODB_AUTH_SOURCE: "admin"
