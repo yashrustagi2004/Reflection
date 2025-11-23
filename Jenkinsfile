@@ -12,8 +12,9 @@
     }
 
     environment {
-      // Jenkins credential ID - only kubeconfig needed for local deployment
+      // Jenkins credential IDs
       KUBECONFIG_CRED = 'kubeconfig-file'        // file credential
+      DB_CREDENTIALS = 'db-credentials'          // username/password credential for MongoDB
       // Tag images with commit SHA so each build is immutable
       IMAGE_TAG = "${env.GIT_COMMIT ?: 'local-' + UUID.randomUUID().toString().take(8)}"
       NAMESPACE = 'reflection'
@@ -81,7 +82,10 @@
       stage('Apply Configuration Changes') {
         steps {
           script {
-            withCredentials([file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
+            withCredentials([
+              file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG'),
+              usernamePassword(credentialsId: env.DB_CREDENTIALS, usernameVariable: 'MONGO_USER', passwordVariable: 'MONGO_PASS')
+            ]) {
               // Check if ConfigMap or other k8s config files changed
               def configChanged = sh(
                 script: "git diff --name-only HEAD~1 HEAD | grep -E 'k8s/configmap.yaml|k8s/.*-configmap.yaml' || true", 
@@ -125,16 +129,13 @@
                   # Copy data.py to pod
                   kubectl cp services/resources/data.py ${env.NAMESPACE}/\$MONGO_POD:/tmp/data.py
                   
-                  # Get MongoDB credentials from Kubernetes secret (base64 decoded)
-                  MONGO_USER=\$(kubectl get secret mongodb-credentials -n ${env.NAMESPACE} -o jsonpath='{.data.MONGO_INITDB_ROOT_USERNAME}' | base64 -d)
-                  MONGO_PASS=\$(kubectl get secret mongodb-credentials -n ${env.NAMESPACE} -o jsonpath='{.data.MONGO_INITDB_ROOT_PASSWORD}' | base64 -d)
-                  
+                  # Use MongoDB credentials from Jenkins credential (already exported as MONGO_USER and MONGO_PASS)
                   # Install pymongo and run data population script
                   kubectl exec -n ${env.NAMESPACE} \$MONGO_POD -- bash -c "
                     apt-get update -qq > /dev/null 2>&1 && 
                     apt-get install -y python3-pip -qq > /dev/null 2>&1 && 
                     pip3 install pymongo --quiet > /dev/null 2>&1 &&
-                    export MONGODB_URI='mongodb://\$MONGO_USER:\$MONGO_PASS@localhost:27017/' &&
+                    export MONGODB_URI='mongodb://${MONGO_USER}:${MONGO_PASS}@localhost:27017/' &&
                     export DATABASE_NAME='\$DB_NAME' &&
                     python3 /tmp/data.py
                   " 2>&1 | grep -v "debconf\\|WARNING\\|Collecting\\|Downloading\\|Installing" || true
