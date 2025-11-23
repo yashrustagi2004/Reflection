@@ -61,6 +61,20 @@ spec:
           value: "qa-generation"
         - name: PORT
           value: "5003"
+        # MongoDB Credentials
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGO_INITDB_ROOT_PASSWORD
+        # Construct MongoDB URI using credentials from secret and config from ConfigMap
+        - name: MONGODB_URI
+          value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@$(MONGODB_HOST):$(MONGODB_PORT)/?authSource=$(MONGODB_AUTH_SOURCE)"
         
         # Resource limits (higher for AI/ML workloads)
         resources:
