@@ -161,19 +161,30 @@
               // Prepare an array
               def services = env.CHANGED_SERVICES.tokenize(',')
               
+              // Map service names to actual directory names
+              def serviceDirMap = [
+                'qa-generation': 'question-answer-generation',
+                'speechtotext': 'SpeechToText',
+                'frontend': 'frontend',
+                'login-management': 'login-management',
+                'file-parsing': 'file-parsing',
+                'resources': 'resources'
+              ]
+              
               // Loop per service - kubectl will use Jenkins user's default kubeconfig
               for (svc in services) {
                   if (!svc) { continue }
                   def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
+                  def actualDir = serviceDirMap[svc] ?: svc  // Use mapped dir or fallback to svc name
                   def dockerfileDir = "services"  // Build from services/ directory, not services/<svc>/
                   def k8sManifest = "k8s/deployments/${svc}.yaml"
 
                   stage("Build ${svc}") {
                     // Build the image locally (no push to registry)
-                    // Build context is services/, Dockerfile is in services/<svc>/Dockerfile
+                    // Build context is services/, Dockerfile is in services/<actualDir>/Dockerfile
                     sh """
                       echo "Building ${svc} -> ${image}"
-                      docker build --file ${dockerfileDir}/${svc}/Dockerfile -t ${image} ${dockerfileDir}
+                      docker build --file ${dockerfileDir}/${actualDir}/Dockerfile -t ${image} ${dockerfileDir}
                       echo "Image built successfully: ${image}"
                     """
                   }
