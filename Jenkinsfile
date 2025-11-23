@@ -78,6 +78,76 @@
         }
       }
 
+      stage('Apply Configuration Changes') {
+        steps {
+          script {
+            // Check if ConfigMap or other k8s config files changed
+            def configChanged = sh(
+              script: "git diff --name-only HEAD~1 HEAD | grep -E 'k8s/configmap.yaml|k8s/.*-configmap.yaml' || true", 
+              returnStdout: true
+            ).trim()
+            
+            if (configChanged) {
+              echo "Configuration changes detected: ${configChanged}"
+              echo "Applying ConfigMap..."
+              sh """
+                kubectl apply -f k8s/configmap.yaml -n ${env.NAMESPACE} || echo "ConfigMap apply failed"
+              """
+              
+              // Check if DATABASE_NAME changed and restart services if needed
+              def dbNameChanged = sh(
+                script: "git diff HEAD~1 HEAD k8s/configmap.yaml | grep 'DATABASE_NAME' || true",
+                returnStdout: true
+              ).trim()
+              
+              if (dbNameChanged) {
+                echo "⚠️  DATABASE_NAME changed! Restarting services that use MongoDB..."
+                sh """
+                  kubectl rollout restart deployment/login-management-deployment -n ${env.NAMESPACE} || true
+                  echo "Services restarted to pick up new database name"
+                """
+                
+                echo "📊 Populating resources data in new database..."
+                sh """
+                  # Get MongoDB pod name
+                  MONGO_POD=\$(kubectl get pod -n ${env.NAMESPACE} -l app=mongodb -o jsonpath='{.items[0].metadata.name}')
+                  
+                  if [ -z "\$MONGO_POD" ]; then
+                    echo "❌ Could not find MongoDB pod"
+                    exit 1
+                  fi
+                  
+                  # Get database name from ConfigMap
+                  DB_NAME=\$(kubectl get configmap reflection-config -n ${env.NAMESPACE} -o jsonpath='{.data.DATABASE_NAME}')
+                  echo "📝 Populating database: \$DB_NAME"
+                  
+                  # Copy data.py to pod
+                  kubectl cp services/resources/data.py ${env.NAMESPACE}/\$MONGO_POD:/tmp/data.py
+                  
+                  # Get MongoDB credentials from Kubernetes secret (base64 decoded)
+                  MONGO_USER=\$(kubectl get secret mongodb-credentials -n ${env.NAMESPACE} -o jsonpath='{.data.MONGO_INITDB_ROOT_USERNAME}' | base64 -d)
+                  MONGO_PASS=\$(kubectl get secret mongodb-credentials -n ${env.NAMESPACE} -o jsonpath='{.data.MONGO_INITDB_ROOT_PASSWORD}' | base64 -d)
+                  
+                  # Install pymongo and run data population script
+                  kubectl exec -n ${env.NAMESPACE} \$MONGO_POD -- bash -c "
+                    apt-get update -qq > /dev/null 2>&1 && 
+                    apt-get install -y python3-pip -qq > /dev/null 2>&1 && 
+                    pip3 install pymongo --quiet > /dev/null 2>&1 &&
+                    export MONGODB_URI='mongodb://\$MONGO_USER:\$MONGO_PASS@localhost:27017/' &&
+                    export DATABASE_NAME='\$DB_NAME' &&
+                    python3 /tmp/data.py
+                  " 2>&1 | grep -v "debconf\\|WARNING\\|Collecting\\|Downloading\\|Installing" || true
+                  
+                  echo "✅ Resources data populated successfully!"
+                """
+              }
+            } else {
+              echo "No configuration changes detected"
+            }
+          }
+        }
+      }
+
       stage('Build & Deploy changed services') {
         when {
           expression { return env.CHANGED_SERVICES?.trim() }
