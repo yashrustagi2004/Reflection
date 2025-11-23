@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: reflection-config
-  namespace: reflection
+  namespace: lightning2
 data:
   # Database Configuration
   DATABASE_NAME: "Reflection"
