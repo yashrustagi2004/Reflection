@@ -95,5 +95,5 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         port=port,
-        debug=os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+        debug=True    # <-- force debug ON
     )
