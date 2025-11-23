@@ -14,11 +14,14 @@
       box-sizing: border-box;
     }
 
-    /* Body styling with consistent gradient background */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    /* Body styling with mint theme */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+      background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
+      color: #2c3034;
     }
 
     /* Navigation Bar */
@@ -33,39 +36,44 @@
       align-items: center;
       gap: 20px;
       z-index: 1000;
-      background: linear-gradient(to bottom, rgba(100, 50, 150, 0.4), transparent);
+      background: rgba(231, 255, 244, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(199, 245, 217, 0.5);
     }
 
     .nav-btn {
       padding: 14px 35px;
-      background: white;
-      border: none;
-      border-radius: 12px;
+      background: #f8f9fb;
+      border: 1px solid #d0d4d9;
+      border-radius: 16px;
       font-size: 18px;
       font-weight: 600;
-      color: #333;
+      color: #2c3034;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       white-space: nowrap;
       text-decoration: none;
       display: inline-block;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
     .nav-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      background: #c7f5d9;
+      border-color: #a6e8c5;
     }
 
     .nav-btn:last-child {
-      background: white;
-      color: #333;
-      border: 3px solid #333;
+      background: #c7f5d9;
+      color: #2c3034;
+      border: 2px solid #a6e8c5;
     }
 
     .active-page {
-      background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%) !important;
-      color: white !important;
-      border: none !important;
+      background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%) !important;
+      color: #2c3034 !important;
+      border: 2px solid #a6e8c5 !important;
     }
 
     /* Page content */
@@ -80,20 +88,17 @@
       max-width: 700px;
       width: 100%;
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(15px);
+      backdrop-filter: blur(12px);
       padding: 50px;
-      border-radius: 25px;
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(199, 245, 217, 0.5);
       text-align: center;
       animation: fadeInUp 0.8s ease-out;
     }
 
     h1 {
-      background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #2c3034;
       margin-bottom: 20px;
       font-size: 2.5rem;
       font-weight: 700;
@@ -101,7 +106,7 @@
 
     p {
       margin-bottom: 25px;
-      color: #555;
+      color: #5a5f66;
       font-size: 1rem;
     }
 
@@ -119,16 +124,17 @@
     input, textarea {
       width: 100%;
       padding: 14px;
-      border: 2px solid #ddd;
-      border-radius: 12px;
+      border: 1px solid #d0d4d9;
+      border-radius: 16px;
       margin-bottom: 20px;
       font-size: 1rem;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
+      background: #f8f9fb;
     }
 
     input:focus, textarea:focus {
-      border-color: #7C3AED;
-      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+      border-color: #a6e8c5;
+      box-shadow: 0 0 0 3px rgba(166, 232, 197, 0.2);
       outline: none;
       background: white;
     }
@@ -138,23 +144,23 @@
     }
 
     .btn-submit {
-      background: linear-gradient(135deg, #6B46C1 0%, #8B5CF6 100%);
-      color: white;
+      background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+      color: #2c3034;
       padding: 16px 40px;
-      border: none;
-      border-radius: 12px;
+      border: 1px solid #a6e8c5;
+      border-radius: 16px;
       font-size: 18px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(107, 70, 193, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     }
 
     .btn-submit:hover {
-      background: linear-gradient(135deg, #8B5CF6 0%, #6B46C1 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(107, 70, 193, 0.4);
+      background: linear-gradient(135deg, #a6e8c5 0%, #c7f5d9 100%);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
     }
 
     /* Flash messages */

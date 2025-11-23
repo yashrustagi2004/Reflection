@@ -15,11 +15,14 @@
             box-sizing: border-box;
         }
 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
             min-height: 100vh;
             overflow-x: hidden;
+            color: #2c3034;
         }
 
         .container {
@@ -32,25 +35,26 @@
            ============================================ */
         .sidebar {
             width: 250px;
-            background: rgba(40, 20, 80, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
             padding: 30px 0;
             position: fixed;
             height: 100vh;
             left: 0;
             top: 0;
             z-index: 1000;
-            border-right: 2px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(199, 245, 217, 0.5);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar-header {
             padding: 0 30px 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(199, 245, 217, 0.5);
             margin-bottom: 30px;
         }
 
         .sidebar-header h2 {
-            color: white;
+            color: #2c3034;
             font-size: 24px;
             font-weight: 700;
         }
@@ -68,23 +72,23 @@
             display: flex;
             align-items: center;
             padding: 15px 15px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #5a5f66;
             text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            border-radius: 16px;
+            transition: all 0.2s ease;
             font-size: 16px;
             font-weight: 500;
         }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: #c7f5d9;
+            color: #2c3034;
             transform: translateX(5px);
         }
 
         .nav-link.active {
-            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
-            color: white;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
         }
 
         .nav-icon {
@@ -143,16 +147,15 @@
         }
 
         .page-title {
-            color: white;
+            color: #2c3034;
             font-size: 36px;
             font-weight: 800;
             margin-bottom: 12px;
             letter-spacing: -0.5px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .page-subtitle {
-            color: rgba(255, 255, 255, 0.9);
+            color: #5a5f66;
             font-size: 18px;
             font-weight: 400;
             line-height: 1.6;
@@ -278,14 +281,14 @@
         .category-icon-wrapper {
             width: 72px;
             height: 72px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
             border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 36px;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
-            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(199, 245, 217, 0.3);
+            transition: all 0.2s ease;
         }
 
         .category-header:hover .category-icon-wrapper {
@@ -337,22 +340,22 @@
         .expand-indicator {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #2c3034;
             font-size: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             position: relative;
             z-index: 1;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(199, 245, 217, 0.3);
         }
 
         .category-header.active .expand-indicator {
             transform: rotate(180deg);
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #a6e8c5 0%, #c7f5d9 100%);
         }
 
         /* Category Body */
@@ -404,19 +407,19 @@
         }
 
         .tab-button.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-            background: rgba(102, 126, 234, 0.08);
+            color: #a6e8c5;
+            border-bottom-color: #a6e8c5;
+            background: rgba(199, 245, 217, 0.2);
         }
 
         .tab-count {
             display: inline-block;
             margin-left: 8px;
             padding: 3px 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            border-radius: 16px;
             font-size: 12px;
-            color: white;
+            color: #2c3034;
             font-weight: 700;
         }
 
@@ -605,18 +608,18 @@
             display: inline-block;
             margin-top: 24px;
             padding: 14px 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
             text-decoration: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
         }
 
         .empty-state-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
         }
 
         /* ============================================

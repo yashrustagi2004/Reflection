@@ -15,12 +15,15 @@
             box-sizing: border-box;
         }
 
-        /* Body styling with consistent gradient background */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        /* Body styling with mint theme */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
             min-height: 100vh;
             overflow-x: hidden;
+            color: #2c3034;
         }
 
         .container {
@@ -31,25 +34,26 @@
         /* Sidebar */
         .sidebar {
             width: 250px;
-            background: rgba(40, 20, 80, 0.95);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
             padding: 30px 0;
             position: fixed;
             height: 100vh;
             left: 0;
             top: 0;
             z-index: 1000;
-            border-right: 2px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(199, 245, 217, 0.5);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar-header {
             padding: 0 30px 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(199, 245, 217, 0.5);
             margin-bottom: 30px;
         }
 
         .sidebar-header h2 {
-            color: white;
+            color: #2c3034;
             font-size: 24px;
             font-weight: 700;
         }
@@ -67,23 +71,23 @@
             display: flex;
             align-items: center;
             padding: 15px 15px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #5a5f66;
             text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            border-radius: 16px;
+            transition: all 0.2s ease;
             font-size: 16px;
             font-weight: 500;
         }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: #c7f5d9;
+            color: #2c3034;
             transform: translateX(5px);
         }
 
         .nav-link.active {
-            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
-            color: white;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
         }
 
         .nav-icon {
@@ -113,23 +117,23 @@
 
         .back-button {
             background: transparent;
-            color: #6366f1;
-            border: 2px solid #6366f1;
+            color: #a6e8c5;
+            border: 1px solid #a6e8c5;
             padding: 10px 24px;
-            border-radius: 8px;
+            border-radius: 16px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .back-button:hover {
-            background: #6366f1;
-            color: white;
-            transform: translateX(-4px);
+            background: #a6e8c5;
+            color: #2c3034;
+            transform: translateX(-4px) scale(1.02);
         }
 
         .back-arrow {
@@ -198,8 +202,8 @@
         }
 
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
             padding: 24px 30px;
             font-weight: 700;
             font-size: 18px;
@@ -226,13 +230,13 @@
         .question-display {
             font-size: 20px;
             font-weight: 600;
-            color: #1f2937;
+            color: #2c3034;
             line-height: 1.7;
             margin-bottom: 20px;
             padding: 24px;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border-radius: 12px;
-            border-left: 4px solid #6366f1;
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 100%);
+            border-radius: 16px;
+            border-left: 4px solid #a6e8c5;
         }
 
         .meta-badges {
@@ -275,21 +279,21 @@
             width: 100%;
             min-height: 300px;
             padding: 18px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            border: 1px solid #d0d4d9;
+            border-radius: 16px;
             font-size: 15px;
             font-family: inherit;
             outline: none;
             resize: vertical;
-            transition: all 0.3s ease;
-            background: #fafafa;
+            transition: all 0.2s ease;
+            background: #f8f9fb;
             line-height: 1.6;
         }
 
         .answer-textarea:focus {
-            border-color: #6366f1;
+            border-color: #a6e8c5;
             background: white;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(166, 232, 197, 0.2);
         }
 
         .answer-textarea::placeholder {
@@ -309,10 +313,10 @@
         }
 
         .submit-button {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
+            border: 1px solid #a6e8c5;
+            border-radius: 16px;
             padding: 14px 32px;
             cursor: pointer;
             font-size: 15px;
@@ -320,13 +324,13 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
         }
 
         .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
         }
 
         .submit-button:active {

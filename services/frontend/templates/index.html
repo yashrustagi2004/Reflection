@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-Powered Interview Platform</title>
     <style>
+        /* Import Inter font - must be first */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         /* ============================================
            GLOBAL STYLES & RESET
            ============================================ */
@@ -14,10 +17,13 @@
             box-sizing: border-box;
         }
 
-        /* Body styling with consistent gradient background */
+        /* Body styling with mint theme */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             overflow-x: hidden;
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
+            color: #2c3034;
+            min-height: 100vh;
         }
 
         /* ============================================
@@ -34,30 +40,32 @@
             align-items: center;
             gap: 20px;
             z-index: 1000;
-            background: linear-gradient(to bottom, rgba(100, 50, 150, 0.4), transparent);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            background: rgba(231, 255, 244, 0.8);
+            backdrop-filter: blur(12px);
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(199, 245, 217, 0.5);
         }
 
         .navbar:hover {
-            background: linear-gradient(to bottom, rgba(100, 50, 150, 0.6), transparent);
+            background: rgba(231, 255, 244, 0.95);
         }
 
         .nav-btn {
             padding: 14px 35px;
-            background: white;
-            border: none;
-            border-radius: 12px;
+            background: #f8f9fb;
+            border: 1px solid #d0d4d9;
+            border-radius: 16px;
             font-size: 18px;
             font-weight: 600;
-            color: #333;
+            color: #2c3034;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             white-space: nowrap;
             text-decoration: none;
             display: inline-block;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         /* Smooth hover animation for nav buttons */
@@ -68,7 +76,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(107, 70, 193, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(199, 245, 217, 0.3), transparent);
             transition: left 0.5s ease;
         }
 
@@ -77,37 +85,38 @@
         }
 
         .nav-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-            background: #f8f9fa;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            background: #c7f5d9;
+            border-color: #a6e8c5;
         }
 
         .nav-btn:active {
-            transform: translateY(-1px);
+            transform: translateY(0) scale(1);
         }
 
         .nav-btn:last-child {
-            background: white;
-            color: #333;
-            border: 3px solid #333;
+            background: #c7f5d9;
+            color: #2c3034;
+            border: 2px solid #a6e8c5;
         }
 
         .nav-btn:last-child:hover {
-            border-color: #6B46C1;
-            background: #6B46C1;
-            color: white;
+            border-color: #a6e8c5;
+            background: #a6e8c5;
+            color: #2c3034;
         }
 
         .nav-btn.active {
-            background: linear-gradient(135deg, #9D7FDB 0%, #B399E8 100%);
-            color: white;
-            border: none;
+            background: linear-gradient(135deg, #c7f5d9 0%, #a6e8c5 100%);
+            color: #2c3034;
+            border: 2px solid #a6e8c5;
         }
 
         .nav-btn.active:hover {
-            background: linear-gradient(135deg, #8B6BC9 0%, #A185D6 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(157, 127, 219, 0.4);
+            background: linear-gradient(135deg, #a6e8c5 0%, #c7f5d9 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(166, 232, 197, 0.3);
         }
 
         /* ============================================
@@ -122,7 +131,7 @@
             overflow: hidden;
         }
 
-        /* Animated gradient background */
+        /* Mint gradient background */
         .hero::before {
             content: '';
             position: absolute;
@@ -130,7 +139,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
             z-index: -2;
             animation: gradientShift 15s ease infinite;
         }
@@ -156,14 +165,14 @@
            MAIN CARD WITH HOVER EFFECTS
            ============================================ */
         .main-card {
-            background: rgba(40, 20, 80, 0.88);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
-            border-radius: 24px;
+            border-radius: 16px;
             padding: 50px;
             margin-bottom: 35px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(199, 245, 217, 0.5);
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
         }
@@ -176,7 +185,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(199, 245, 217, 0.2), transparent);
             transition: left 0.6s ease;
         }
 
@@ -186,35 +195,34 @@
 
         .main-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            border-color: #a6e8c5;
         }
 
         .main-title {
             font-size: 56px;
             font-weight: 700;
-            color: white;
+            color: #2c3034;
             line-height: 1.2;
             margin-bottom: 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .main-card:hover .main-title {
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            color: #1a1d21;
         }
 
         /* ============================================
            SUBTITLE CARD WITH HOVER EFFECTS
            ============================================ */
         .subtitle-card {
-            background: rgba(40, 20, 80, 0.88);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
-            border-radius: 24px;
+            border-radius: 16px;
             padding: 35px 45px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(199, 245, 217, 0.5);
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
             animation: fadeInUp 1s ease-out;
@@ -228,7 +236,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+            background: linear-gradient(90deg, transparent, rgba(199, 245, 217, 0.2), transparent);
             transition: left 0.6s ease;
         }
 
@@ -238,22 +246,21 @@
 
         .subtitle-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.25);
-            background: rgba(40, 20, 80, 0.92);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            border-color: #a6e8c5;
+            background: rgba(255, 255, 255, 1);
         }
 
         .subtitle {
             font-size: 22px;
-            color: white;
+            color: #2c3034;
             line-height: 1.6;
             margin: 0;
-            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .subtitle-card:hover .subtitle {
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: #1a1d21;
         }
 
         /* ============================================

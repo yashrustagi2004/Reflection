@@ -11,13 +11,16 @@
             box-sizing: border-box;
         }
 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6B46C1 0%, #7C3AED 25%, #8B5CF6 50%, #4C9FE8 75%, #5BC0DE 100%);
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e9fff4 0%, #c7f5d9 25%, #a6e8c5 50%, #e9fff4 75%, #f8f9fb 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #2c3034;
         }
 
         .container {
@@ -26,10 +29,10 @@
             margin: 0 auto;
             padding: 40px;
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(199, 245, 217, 0.5);
         }
 
         .warning-icon {
@@ -107,15 +110,18 @@
         .form-control {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border: 1px solid #d0d4d9;
+            border-radius: 16px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: all 0.2s ease;
+            background: #f8f9fb;
         }
 
         .form-control:focus {
             outline: none;
             border-color: #dc3545;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
         }
 
         .checkbox-group {
@@ -154,12 +160,14 @@
             color: white;
             width: 100%;
             margin-bottom: 10px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
         }
 
         .btn-danger:hover:not(:disabled) {
             background: #c82333;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.4);
         }
 
         .btn-danger:disabled {
@@ -168,13 +176,15 @@
         }
 
         .btn-secondary {
-            background: #6c757d;
-            color: white;
+            background: #d0d4d9;
+            color: #2c3034;
             width: 100%;
+            border-radius: 16px;
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
+            background: #a6e8c5;
+            transform: translateY(-2px) scale(1.02);
         }
 
         .message {
