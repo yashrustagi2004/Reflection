@@ -81,43 +81,44 @@
       stage('Apply Configuration Changes') {
         steps {
           script {
-            // Check if ConfigMap or other k8s config files changed
-            def configChanged = sh(
-              script: "git diff --name-only HEAD~1 HEAD | grep -E 'k8s/configmap.yaml|k8s/.*-configmap.yaml' || true", 
-              returnStdout: true
-            ).trim()
-            
-            if (configChanged) {
-              echo "Configuration changes detected: ${configChanged}"
-              echo "Applying ConfigMap..."
-              sh """
-                kubectl apply -f k8s/configmap.yaml -n ${env.NAMESPACE} || echo "ConfigMap apply failed"
-              """
-              
-              // Check if DATABASE_NAME changed and restart services if needed
-              def dbNameChanged = sh(
-                script: "git diff HEAD~1 HEAD k8s/configmap.yaml | grep 'DATABASE_NAME' || true",
+            withCredentials([file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
+              // Check if ConfigMap or other k8s config files changed
+              def configChanged = sh(
+                script: "git diff --name-only HEAD~1 HEAD | grep -E 'k8s/configmap.yaml|k8s/.*-configmap.yaml' || true", 
                 returnStdout: true
               ).trim()
               
-              if (dbNameChanged) {
-                echo "⚠️  DATABASE_NAME changed! Restarting services that use MongoDB..."
+              if (configChanged) {
+                echo "Configuration changes detected: ${configChanged}"
+                echo "Applying ConfigMap..."
                 sh """
-                  kubectl rollout restart deployment/login-management-deployment -n ${env.NAMESPACE} || true
-                  echo "Services restarted to pick up new database name"
+                  kubectl apply -f k8s/configmap.yaml -n ${env.NAMESPACE} || echo "ConfigMap apply failed"
                 """
                 
-                echo "📊 Populating resources data in new database..."
-                sh """
-                  # Get MongoDB pod name
-                  MONGO_POD=\$(kubectl get pod -n ${env.NAMESPACE} -l app=mongodb -o jsonpath='{.items[0].metadata.name}')
+                // Check if DATABASE_NAME changed and restart services if needed
+                def dbNameChanged = sh(
+                  script: "git diff HEAD~1 HEAD k8s/configmap.yaml | grep 'DATABASE_NAME' || true",
+                  returnStdout: true
+                ).trim()
+                
+                if (dbNameChanged) {
+                  echo "⚠️  DATABASE_NAME changed! Restarting services that use MongoDB..."
+                  sh """
+                    kubectl rollout restart deployment/login-management-deployment -n ${env.NAMESPACE} || true
+                    echo "Services restarted to pick up new database name"
+                  """
                   
-                  if [ -z "\$MONGO_POD" ]; then
-                    echo "❌ Could not find MongoDB pod"
-                    exit 1
-                  fi
-                  
-                  # Get database name from ConfigMap
+                  echo "📊 Populating resources data in new database..."
+                  sh """
+                    # Get MongoDB pod name
+                    MONGO_POD=\$(kubectl get pod -n ${env.NAMESPACE} -l app=mongodb -o jsonpath='{.items[0].metadata.name}')
+                    
+                    if [ -z "\$MONGO_POD" ]; then
+                      echo "❌ Could not find MongoDB pod"
+                      exit 1
+                    fi
+                    
+                    # Get database name from ConfigMap
                   DB_NAME=\$(kubectl get configmap reflection-config -n ${env.NAMESPACE} -o jsonpath='{.data.DATABASE_NAME}')
                   echo "📝 Populating database: \$DB_NAME"
                   
@@ -144,6 +145,7 @@
             } else {
               echo "No configuration changes detected"
             }
+            } // end withCredentials
           }
         }
       }
@@ -154,47 +156,49 @@
         }
         steps {
           script {
-            // Prepare an array
-            def services = env.CHANGED_SERVICES.tokenize(',')
-            
-            // Loop per service - kubectl will use Jenkins user's default kubeconfig
-            for (svc in services) {
-                if (!svc) { continue }
-                def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
-                def dockerfileDir = "services"  // Build from services/ directory, not services/<svc>/
-                def k8sManifest = "k8s/deployments/${svc}.yaml"
+            withCredentials([file(credentialsId: env.KUBECONFIG_CRED, variable: 'KUBECONFIG')]) {
+              // Prepare an array
+              def services = env.CHANGED_SERVICES.tokenize(',')
+              
+              // Loop per service - kubectl will use Jenkins user's default kubeconfig
+              for (svc in services) {
+                  if (!svc) { continue }
+                  def image = "${params.ORG}/${svc}:${env.IMAGE_TAG}"
+                  def dockerfileDir = "services"  // Build from services/ directory, not services/<svc>/
+                  def k8sManifest = "k8s/deployments/${svc}.yaml"
 
-                stage("Build ${svc}") {
-                  // Build the image locally (no push to registry)
-                  // Build context is services/, Dockerfile is in services/<svc>/Dockerfile
-                  sh """
-                    echo "Building ${svc} -> ${image}"
-                    docker build --file ${dockerfileDir}/${svc}/Dockerfile -t ${image} ${dockerfileDir}
-                    echo "Image built successfully: ${image}"
-                  """
-                }
+                  stage("Build ${svc}") {
+                    // Build the image locally (no push to registry)
+                    // Build context is services/, Dockerfile is in services/<svc>/Dockerfile
+                    sh """
+                      echo "Building ${svc} -> ${image}"
+                      docker build --file ${dockerfileDir}/${svc}/Dockerfile -t ${image} ${dockerfileDir}
+                      echo "Image built successfully: ${image}"
+                    """
+                  }
 
-                stage("Deploy ${svc}") {
-                  // Create a temporary adjusted manifest that points to the new image and apply it
-                  sh """
-                    tmp=\$(mktemp /tmp/${svc}-manifest.XXXX.yaml)
-                    # Safely replace the image line in the manifest. This is intentionally conservative:
-                    # - it finds the first 'image:' in the file and substitutes the value. Adjust if your manifest has multiple images.
-                    awk -v img="${image}" '{
-                      if (!found && match(\$0,/^[[:space:]]*image:[[:space:]]*/)) {
-                        sub(/^[[:space:]]*image:[[:space:]]*.*/, \"        image: \" img)
-                        found=1
-                      }
-                      print
-                    }' ${k8sManifest} > \$tmp
-                    # Apply the temporary manifest - kubectl will use Jenkins user's kubeconfig
-                    kubectl apply -f \$tmp -n ${env.NAMESPACE}
-                    rm -f \$tmp
-                    # Wait for rollout to complete
-                    kubectl rollout status deployment/${svc}-deployment -n ${env.NAMESPACE} --timeout=120s || true
-                  """
-                }
-              } // end for
+                  stage("Deploy ${svc}") {
+                    // Create a temporary adjusted manifest that points to the new image and apply it
+                    sh """
+                      tmp=\$(mktemp /tmp/${svc}-manifest.XXXX.yaml)
+                      # Safely replace the image line in the manifest. This is intentionally conservative:
+                      # - it finds the first 'image:' in the file and substitutes the value. Adjust if your manifest has multiple images.
+                      awk -v img="${image}" '{
+                        if (!found && match(\$0,/^[[:space:]]*image:[[:space:]]*/)) {
+                          sub(/^[[:space:]]*image:[[:space:]]*.*/, \"        image: \" img)
+                          found=1
+                        }
+                        print
+                      }' ${k8sManifest} > \$tmp
+                      # Apply the temporary manifest - kubectl will use Jenkins user's kubeconfig
+                      kubectl apply -f \$tmp -n ${env.NAMESPACE}
+                      rm -f \$tmp
+                      # Wait for rollout to complete
+                      kubectl rollout status deployment/${svc}-deployment -n ${env.NAMESPACE} --timeout=120s || true
+                    """
+                  }
+                } // end for
+            } // end withCredentials
           } // end script
         } // end steps
       } // end stage
