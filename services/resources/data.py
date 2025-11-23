@@ -2,7 +2,7 @@ import os
 from pymongo import MongoClient
 # ==================== MongoDB Setup ====================
 client = MongoClient(os.getenv("MONGODB_URI", "mongodb://localhost:27017/"))
-db = client["Reflection"]
+db = client[os.getenv("DATABASE_NAME", "Reflection")]
 resources_collection = db["resources"]
 resources_collection.delete_many({})
 #data for resources

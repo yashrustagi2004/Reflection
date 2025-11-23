@@ -6,7 +6,9 @@ metadata:
 data:
   # Database Configuration
   DATABASE_NAME: "Reflection"
-  MONGODB_URI: "mongodb://admin:reflectionpass123@mongodb-service:27017/Reflection?authSource=admin"
+  MONGODB_HOST: "mongodb-service"
+  MONGODB_PORT: "27017"
+  MONGODB_AUTH_SOURCE: "admin"
   
   # Service URLs (internal Kubernetes DNS)
   FRONTEND_PORT: "5000"

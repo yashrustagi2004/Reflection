@@ -26,47 +26,34 @@ echo "✅ Namespace 'reflection' exists"
 echo ""
 
 # Step 1: Create persistent storage directory
-echo "📁 Step 1/8: Creating persistent storage directory..."
+echo "📁 Step 1/9: Creating persistent storage directory..."
 sudo mkdir -p /opt/kubernetes-data/mongodb
 sudo chmod 777 /opt/kubernetes-data/mongodb
 echo "   ✅ Created: /opt/kubernetes-data/mongodb"
 echo ""
 
 # Step 2: Create MongoDB credentials secret
-echo "🔐 Step 2/8: Creating MongoDB credentials secret..."
+echo "🔐 Step 2/9: Creating MongoDB credentials secret..."
 if kubectl get secret mongodb-credentials -n reflection &> /dev/null; then
     echo "   ℹ️  Secret already exists, skipping creation"
 else
     kubectl create secret generic mongodb-credentials \
       --namespace=reflection \
       --from-literal=MONGO_INITDB_ROOT_USERNAME=admin \
-      --from-literal=MONGO_INITDB_ROOT_PASSWORD=reflectionpass123
+      --from-literal=MONGO_INITDB_ROOT_PASSWORD=admin123
     echo "   ✅ MongoDB credentials secret created"
 fi
 echo ""
 
-# Step 3: Apply PersistentVolume
-echo "💾 Step 3/8: Creating PersistentVolume..."
-kubectl apply -f k8s/mongodb-pv.yaml
-echo "   ✅ PersistentVolume created"
-echo ""
-
-# Step 4: Apply PersistentVolumeClaim
-echo "💾 Step 4/8: Creating PersistentVolumeClaim..."
-kubectl apply -f k8s/mongodb-pvc.yaml
-echo "   ✅ PersistentVolumeClaim created"
-echo ""
-
-# Step 5: Deploy MongoDB
-echo "🚀 Step 5/8: Deploying MongoDB..."
+# Step 3: Deploy MongoDB StatefulSet (with auto-created PVCs)
+echo "🚀 Step 3/7: Deploying MongoDB StatefulSet..."
 kubectl apply -f k8s/mongodb-deployment.yaml
-kubectl apply -f k8s/mongodb-service.yaml
-echo "   ✅ MongoDB deployment and service created"
+echo "   ✅ MongoDB StatefulSet and headless service created"
 echo ""
 
-# Step 6: Wait for MongoDB to be ready
-echo "⏳ Step 6/8: Waiting for MongoDB to be ready (max 120s)..."
-if kubectl wait --for=condition=ready pod -l app=mongodb -n reflection --timeout=120s; then
+# Step 4: Wait for MongoDB to be ready
+echo "⏳ Step 4/7: Waiting for MongoDB pod to be ready (max 30s)..."
+if kubectl wait --for=condition=ready pod -l app=mongodb -n reflection --timeout=30s; then
     echo "   ✅ MongoDB is ready!"
 else
     echo "   ⚠️  MongoDB is taking longer than expected. Check logs:"
@@ -74,8 +61,14 @@ else
 fi
 echo ""
 
-# Step 7: Deploy Mongo Express
-echo "🚀 Step 7/8: Deploying Mongo Express..."
+# Step 5: Apply mongo express config
+echo "🚀 Step 5/7: Applying Mongo Express ConfigMap..."
+kubectl apply -f k8s/mongo-express-configmap.yaml
+echo "   ✅ Mongo Express ConfigMap applied"
+echo ""
+
+# Step 6: Deploy Mongo Express
+echo "🚀 Step 6/7: Deploying Mongo Express..."
 kubectl apply -f k8s/mongo-express-deployment.yaml
 echo "   ✅ Mongo Express deployment and service created"
 echo ""
@@ -90,8 +83,8 @@ else
 fi
 echo ""
 
-# Step 8: Initialize Resources Data
-echo "📚 Step 8/8: Initializing resources data..."
+# Step 7: Initialize Resources Data
+echo "📚 Step 7/7: Initializing resources data..."
 if [ -f "services/resources/data.py" ]; then
     echo "   📝 Copying resources data script to MongoDB pod..."
     
@@ -104,13 +97,22 @@ if [ -f "services/resources/data.py" ]; then
         # Copy data.py to pod
         kubectl cp services/resources/data.py reflection/$MONGO_POD:/tmp/data.py
         
+        # Get DATABASE_NAME from ConfigMap
+        DB_NAME=$(kubectl get configmap reflection-config -n reflection -o jsonpath='{.data.DATABASE_NAME}')
+        echo "   📊 Using database: $DB_NAME"
+        
+        # Get MongoDB credentials from Kubernetes secret
+        MONGO_USER=$(kubectl get secret mongodb-credentials -n reflection -o jsonpath='{.data.MONGO_INITDB_ROOT_USERNAME}' | base64 -d)
+        MONGO_PASS=$(kubectl get secret mongodb-credentials -n reflection -o jsonpath='{.data.MONGO_INITDB_ROOT_PASSWORD}' | base64 -d)
+        
         # Install pymongo in the pod and run the script
         echo "   🔄 Running data population script..."
         kubectl exec -n reflection $MONGO_POD -- bash -c "
             apt-get update -qq > /dev/null 2>&1 && 
             apt-get install -y python3-pip -qq > /dev/null 2>&1 && 
             pip3 install pymongo --quiet > /dev/null 2>&1 &&
-            export MONGODB_URI='mongodb://admin:reflectionpass123@localhost:27017/' &&
+            export MONGODB_URI='mongodb://$MONGO_USER:$MONGO_PASS@localhost:27017/' &&
+            export DATABASE_NAME='$DB_NAME' &&
             python3 /tmp/data.py
         " 2>&1 | grep -v "debconf\|WARNING\|Collecting\|Downloading\|Installing" || true
         
@@ -149,10 +151,16 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "🎉 How to Access:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# Get credentials from secret for display
+DISPLAY_USER=$(kubectl get secret mongodb-credentials -n reflection -o jsonpath='{.data.MONGO_INITDB_ROOT_USERNAME}' | base64 -d)
+DISPLAY_PASS=$(kubectl get secret mongodb-credentials -n reflection -o jsonpath='{.data.MONGO_INITDB_ROOT_PASSWORD}' | base64 -d)
+DISPLAY_DB=$(kubectl get configmap reflection-config -n reflection -o jsonpath='{.data.DATABASE_NAME}')
+
 echo "📊 Mongo Express GUI:"
 echo "   URL: http://localhost:8081"
-echo "   Username: admin"
-echo "   Password: admin123"
+echo "   Username: $DISPLAY_USER"
+echo "   Password: $DISPLAY_PASS"
 echo ""
 echo "   If not accessible, try port-forwarding:"
 echo "   kubectl port-forward -n reflection svc/mongo-express-service 8081:8081"
@@ -160,13 +168,13 @@ echo ""
 echo "🗄️ MongoDB Connection:"
 echo "   Host: mongodb-service"
 echo "   Port: 27017"
-echo "   Database: Reflection"
-echo "   Username: admin"
-echo "   Password: reflectionpass123"
-echo "   Connection String: mongodb://admin:reflectionpass123@mongodb-service:27017/"
+echo "   Database: $DISPLAY_DB"
+echo "   Username: $DISPLAY_USER"
+echo "   Password: $DISPLAY_PASS"
+echo "   Connection String: mongodb://$DISPLAY_USER:$DISPLAY_PASS@mongodb-service:27017/"
 echo ""
-echo "🔍 MongoDB Shell Access:"
-echo "   kubectl exec -it -n reflection deployment/mongodb -- mongosh -u admin -p reflectionpass123"
+echo "🔍 MongoDB Shell Access (StatefulSet pod):"
+echo "   kubectl exec -it -n reflection mongodb-0 -- mongosh -u $DISPLAY_USER -p $DISPLAY_PASS"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
