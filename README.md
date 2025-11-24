@@ -4,97 +4,56 @@
 
 ![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![Architecture](https://img.shields.io/badge/architecture-microservices-green)
-![License](https://img.shields.io/badge/license-MIT-orange)
-
-**An intelligent interview preparation platform using microservices architecture**
-
-[Quick Start](#-quick-start) • [Documentation](#-documentation) • [Features](#-features) • [Architecture](#-architecture)
+![Kubernetes](https://img.shields.io/badge/platform-kubernetes-326CE5)
 
 </div>
 
 ---
 
-## 🎯 Overview
+## Overview
 
 Reflection is an AI-powered interview preparation platform that helps job seekers prepare for technical and behavioral interviews. The application analyzes resumes and job descriptions to generate personalized interview questions and provides real-time feedback on answers.
 
-### ✨ Key Features
+Built with a **cloud-native microservices architecture** running on Kubernetes, the platform ensures scalability, reliability, and seamless deployment through automated CI/CD pipelines.
 
-- 🔐 **Secure Authentication** - OAuth integration with Google and GitHub
-- 📄 **Smart File Processing** - Multi-layer security validation for document uploads
-- 🤖 **AI-Powered Questions** - Generate tailored interview questions using Google Gemini
-- 💡 **Intelligent Feedback** - Real-time answer analysis and improvement suggestions
-- 🎯 **Personalized Practice** - Context-aware questions based on your resume and target role
-- 📊 **Progress Tracking** - Monitor your interview preparation journey
-- 🔍 **Vector Embeddings** - Semantic storage using Pinecone for intelligent retrieval
-- 💾 **User-Specific Data** - Questions persist and are isolated per user in MongoDB
+### Key Features
 
----
+**Application Features:**
+- **Secure Authentication** - OAuth integration with Google and GitHub, JWT-based session management
+- **Smart File Processing** - Multi-layer security validation for document uploads (MIME type, magic numbers, size limits)
+- **AI-Powered Questions** - Generate tailored interview questions using Google Gemini AI
+- **Intelligent Feedback** - Real-time answer analysis and improvement suggestions
+- **Personalized Practice** - Context-aware questions based on resume and target job role
+- **Progress Tracking** - Monitor interview preparation journey with persistent user data
+- **Vector Embeddings** - Semantic storage using Pinecone for intelligent document retrieval
+- **User-Specific Data** - Questions persist and are isolated per user in MongoDB
 
-## 🆕 What's New in v2.1.0
-
-### Pinecone & MongoDB Integration
-
-✨ **User-Specific Questions**: Questions are now saved per user and persist across sessions  
-✨ **Vector Embeddings**: Resume and JD stored as embeddings in Pinecone  
-✨ **Better Security**: Enhanced user data isolation and authentication  
-✨ **Persistent Storage**: MongoDB stores user-specific questions  
-
-📖 **See**: [`QUICKSTART.md`](QUICKSTART.md) for setup instructions
-
----
-
-### Service Responsibilities
-
-| Service | Purpose | Tech Stack |
-|---------|---------|------------|
-| **Frontend** | User interface & orchestration | Flask, Jinja2 |
-| **Login Management** | Authentication & user data | Flask, MongoDB, OAuth |
-| **File Parsing** | Secure upload, parsing & embeddings | Flask, PyPDF2, Pinecone, sentence-transformers |
-| **Question Generation & Answer Analysis** | Interview question generation & storage | Flask, LangChain, Gemini, MongoDB |
-| **Resources** | storage & retrieval | Flask, MongoDB |
+**Infrastructure Features:**
+- **Kubernetes Orchestration** - Full containerized deployment with proper resource management
+- **Service Mesh** - Microservices communication via Kubernetes ClusterIP Services
+- **Persistent Storage** - MongoDB StatefulSets with PersistentVolumeClaims for data durability
+- **Configuration Management** - Centralized ConfigMaps and Secrets for environment variables
+- **Health Monitoring** - Liveness, readiness, and startup probes for all services
+- **Auto-Scaling** - Horizontal Pod Autoscaler (HPA) based on CPU/memory utilization
+- **Rolling Updates** - Zero-downtime deployments with configurable rollout strategies
+- **CI/CD Pipeline** - Automated builds and deployments via Jenkins with git-based triggers
 
 ---
 
-## 📚 Documentation
+## Architecture
 
-- **[docs/DEBUG_ENDPOINTS.md](docs/DEBUG_ENDPOINTS.md)** - API debugging guide
-- **[docs/api/](docs/api/)** - API documentation
+### Microservices Overview
 
----
+The platform consists of six independent microservices orchestrated by Kubernetes:
 
-## Quick Start
-
-### Prerequisites
-
-- Python 3.13.4
-- MongoDB
-- Pinecone account (free tier available)
-- Git
-
-### Installation (5 minutes)
-
-```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd Reflection
-
-# 2. Configure environment
-cp services/.env.example services/.env
-# Edit services/.env with your API keys
-
-# 3. Start MongoDB
-docker run -d -p 27017:27017 --name reflection-mongodb mongo:7.0
-
-# 4. Start all services
-chmod +x start-services.sh
-./start-services.sh
-
-# 5. Open browser
-open http://localhost:5000
-```
-
-For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md).
+| Service | Purpose | Port | Tech Stack |
+|---------|---------|------|------------|
+| **Frontend** | User interface & request orchestration | 5000 | Flask, Jinja2 Templates |
+| **Login Management** | Authentication & user data management | 5001 | Flask, MongoDB, OAuth 2.0 |
+| **File Parsing** | Secure file upload, parsing & vector embeddings | 5002 | Flask, PyPDF2, Pinecone, sentence-transformers |
+| **QA Generation** | AI question generation & answer analysis | 5003 | Flask, LangChain, Google Gemini, MongoDB |
+| **Resources** | Learning resource storage & retrieval | 5005 | Flask, MongoDB |
+| **SpeechToText** | Voice-to-text transcription | 5006 | Flask, Speech Recognition APIs |
 
 ---
 
@@ -102,72 +61,38 @@ For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md).
 
 ### Multi-Layer File Validation
 
-- ✅ File extension checking
-- ✅ MIME type validation
-- ✅ Magic number verification
-- ✅ Size limits enforcement
-- ✅ Path traversal prevention
-- ✅ Filename sanitization
+- **File Extension Checking** - Whitelist-based validation
+- **MIME Type Validation** - Content-type verification
+- **Magic Number Verification** - Binary signature analysis using python-magic
+- **Size Limits Enforcement** - Configurable file size restrictions
+- **Path Traversal Prevention** - Filename sanitization and validation
+- **Virus Scanning Ready** - Integration points for antivirus scanning
 
 ### Authentication & Authorization
 
-- ✅ JWT-based authentication
-- ✅ OAuth 2.0 integration
-- ✅ Service-to-service authentication
-- ✅ Token expiration handling
-- ✅ Secure session management
+- **JWT-Based Authentication** - Stateless token-based auth
+- **OAuth 2.0 Integration** - Google and GitHub login
+- **Service-to-Service Authentication** - Internal API security
+- **Token Expiration Handling** - Automatic refresh mechanisms
+- **Secure Session Management** - HttpOnly cookies, CSRF protection
 
 ### API Security
 
-- ✅ Input validation and sanitization
-- ✅ CORS configuration
-- ✅ Request size limits
-- ✅ Error handling without information leakage
-- ✅ Secure coding practices
+- **Input Validation** - Request payload sanitization
+- **CORS Configuration** - Cross-origin resource sharing policies
+- **Request Size Limits** - Protection against large payloads
+- **Rate Limiting Ready** - Throttling mechanism integration points
+- **Error Handling** - No sensitive information leakage
+- **Security Headers** - X-Frame-Options, X-Content-Type-Options
 
----
+### Infrastructure Security
 
-## Technology Stack
-
-### Backend
-- **Framework:** Flask 3.0
-- **Database:** MongoDB 7.0
-- **Vector DB:** Pinecone
-- **AI/ML:** Google Gemini, LangChain
-- **Authentication:** OAuth 2.0, JWT
-
-### Infrastructure
-- **Containerization:** 
-- **Orchestration:** 
-- **Architecture:** Microservices (Monorepo)
-
-### Security
-- **File Validation:** python-magic
-- **Password Hashing:** bcrypt
-- **Token Management:** PyJWT
-
----
-
-## Project Structure
-
-```
-Reflection/
-├── services/                      # Microservices monorepo
-│   ├── shared/                   # Shared utilities
-│   │   ├── auth_middleware.py   # JWT authentication
-│   │   ├── service_client.py    # Inter-service communication
-│   │   └── database.py          # Database connection
-│   │
-│   ├── frontend/                # Web interface
-│   ├── login-management/        # Authentication service
-│   ├── file-parsing/            # File processing service
-│   ├── question-answer-generation/  # AI question generation
-│   ├── answer-analysis/         # Answer evaluation service
-│   └── resources/               # Vector storage service
-│
-├── start-services.sh            # Startup script
-├── stop-services.sh             # Shutdown script
-```
+- **Kubernetes Secrets** - Encrypted credential storage
+- **Non-Root Containers** - All services run as non-root users
+- **Security Contexts** - Dropped capabilities, read-only filesystems
+- **Network Policies Ready** - Service mesh preparation
+- **Resource Limits** - CPU/memory constraints to prevent DoS
+- **Image Security** - Base image vulnerability scanning ready
 
 ---
 
@@ -175,118 +100,202 @@ Reflection/
 
 ### Environment Variables
 
-Copy `services/.env.example` to `services/.env` and configure:
+Each service uses environment variables injected from Kubernetes ConfigMaps and Secrets:
 
----
-
-## 🧪 Testing
-
-### Manual Testing
-
-```bash
-# Test service health
-curl http://localhost:5000/health
-curl http://localhost:5001/health
-curl http://localhost:5002/health
-
-# Test file upload
-curl -X POST http://localhost:5002/api/files/upload/resume \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@resume.pdf"
+**Secrets (mongodb-credentials):**
+```yaml
+MONGO_INITDB_ROOT_USERNAME: <base64-encoded>
+MONGO_INITDB_ROOT_PASSWORD: <base64-encoded>
 ```
 
-### Automated Testing (TODO)
+**Secrets (reflection-secrets):**
+```yaml
+GOOGLE_CLIENT_ID: <base64-encoded>
+GOOGLE_CLIENT_SECRET: <base64-encoded>
+GITHUB_CLIENT_ID: <base64-encoded>
+GITHUB_CLIENT_SECRET: <base64-encoded>
+GOOGLE_API_KEY: <base64-encoded>
+PINECONE_API_KEY: <base64-encoded>
+JWT_SECRET_KEY: <base64-encoded>
+FLASK_SECRET_KEY: <base64-encoded>
+```
+---
+
+## CI/CD Pipeline
+
+### Jenkins Pipeline Features
+
+**Automated Change Detection:**
+- Git diff-based service detection (only rebuild changed services)
+- ConfigMap change detection with automatic service restarts
+- Database name change detection with data migration
+
+**Build & Deploy Stages:**
+1. **Checkout** - Fetch latest code from GitHub
+2. **Detect Changes** - Identify modified services
+3. **Apply Configuration** - Update ConfigMaps, handle database changes
+4. **Build Services** - Docker image build with commit SHA tagging
+5. **Deploy Services** - Kubernetes deployment with rolling updates
+6. **Post-Deploy** - Restart port-forwards, health checks
+
+**Credential Management:**
+- `kubeconfig-file` - Kubernetes cluster access
+- `db-credentials` - MongoDB admin credentials for data population
+
+**Pipeline Trigger:**
+- Automatic builds on git push to `refactorCodeBase` branch
+- Manual trigger via Jenkins UI
+
+### Jenkinsfile Structure
+
+```groovy
+pipeline {
+  agent any
+  environment {
+    KUBECONFIG_CRED = 'kubeconfig-file'
+    DB_CREDENTIALS = 'db-credentials'
+    NAMESPACE = 'reflection'
+    IMAGE_TAG = "${env.GIT_COMMIT}"
+  }
+  stages {
+    // Checkout, detect changes, build, deploy
+  }
+}
+```
+---
+
+## Local Installation and Setup
+
+### Prerequisites
+
+Before starting, ensure you have the following installed:
+- **Python 3.8+** (Python 3.12 or 3.13 recommended for QA Generation service)
+- **MongoDB** (running locally on port 27017)
+- **Git** (for cloning the repository)
+
+### Step 1: Clone the Repository
 
 ```bash
-# Run tests
-pytest services/login-management/tests
-pytest services/file-parsing/tests
+git clone https://github.com/yashrustagi2004/Reflection.git
+cd Reflection/services
 ```
 
----
+### Step 2: Start MongoDB
 
-## Service Endpoints
-
-| Service | Health Check | Port |
-|---------|--------------|------|
-| Frontend | http://localhost:5000/health | 5000 |
-| Login Management | http://localhost:5001/health | 5001 |
-| File Parsing | http://localhost:5002/health | 5002 |
-| Question Generation and Answer Analysis | http://localhost:5003/health | 5003 |
-| Resources | http://localhost:5005/health | 5005 |
-
----
-
-## Development
-
-### Running a Single Service
+Ensure MongoDB is running on your system:
 
 ```bash
-cd services/<service-name>
-python -m venv venv
+# Check if MongoDB is running
+sudo systemctl status mongod
+
+# If not running, start it
+sudo systemctl start mongod
+```
+
+### Step 3: Configure Environment Variables
+
+Create a `.env` file from the example template and add your API keys:
+
+```bash
+cd services
+cp .env.example .env
+```
+
+Edit the `.env` file and add your credentials:
+
+### Step 4: Install Dependencies and Run Services
+
+You need to run **6 microservices** in separate terminal windows. Each service requires its own virtual environment.
+
+#### Terminal 1: Frontend Service (Port 5000)
+
+```bash
+cd services/frontend
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python app.py
+python3 app.py
 ```
 
-### Adding a New Service
+#### Terminal 2: Login Management Service (Port 5001)
 
-1. Create service directory
-2. Create `app.py` with Flask app
-3. Add `requirements.txt`
-4. Import shared utilities
-5. Update `docker-compose.yml`
-6. Document API endpoints
+```bash
+cd services/login-management
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 app.py
+```
 
-### Code Style
+#### Terminal 3: File Parsing Service (Port 5002)
 
-- Follow PEP 8 guidelines
-- Use type hints where possible
-- Write docstrings for functions
-- Keep functions small and focused
+```bash
+cd services/file-parsing
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 app.py
+```
 
----
+#### Terminal 4: Question-Answer Generation Service (Port 5003)
 
-## 🌐 Deployment
+**Important:** Use Python 3.12 or 3.13 for this service due to LangChain dependencies.
 
-### Production Deployment
+```bash
+cd services/question-answer-generation
+python3.12 -m venv venv  # or python3.13
+source venv/bin/activate
+pip install -r requirements.txt
+python3.12 app.py
+```
 
-1. Use managed MongoDB (MongoDB Atlas)
-2. Set up reverse proxy (Nginx)
-3. Enable HTTPS (Let's Encrypt)
-4. Configure environment variables
-6. Implement CI/CD pipeline
+#### Terminal 5: Speech-to-Text Service (Port 5004)
 
----
+```bash
+cd services/SpeechToText
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 app.py
+```
 
-## 🤝 Contributing
+#### Terminal 6: Resources Service (Port 5005)
 
-Contributions are welcome! Please follow these steps:
+```bash
+cd services/resources
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 app.py
+```
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Step 5: Access the Application
 
----
+Once all services are running, open your browser and navigate to:
 
-## 📝 Changelog
+```
+http://localhost:5000
+```
 
-### Version 2.0.0 (October 2025)
-- ✨ Migrated from monolithic to microservices architecture
-- 🔒 Enhanced security with multi-layer file validation
-- 🚀 Improved scalability with independent services
-- 📚 Comprehensive documentation
-- 🐳 Docker support
+### Verify Services are Running
 
-### Version 1.0.0 (Previous)
-- Initial monolithic implementation
+Check that all services are healthy:
 
----
+```bash
+# Frontend
+curl http://localhost:5000/health
 
-## 📄 License
+# Login Management
+curl http://localhost:5001/health
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# File Parsing
+curl http://localhost:5002/health
+
+# QA Generation
+curl http://localhost:5003/health
+
+# Resources
+curl http://localhost:5005/health
+```
 
 ---
