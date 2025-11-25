@@ -215,16 +215,6 @@
         } // end steps
       } // end stage
 
-      stage('Optional: Security scan') {
-        when {
-          expression { return params.SCAN == 'true' }
-        }
-        steps {
-          echo "Optional vulnerability scan stage. Configure trivy or your scanner of choice and bind its credentials securely."
-        }
-      }
-    } // end stages
-
     post {
       success {
         echo "Pipeline finished successfully. Services changed: ${env.CHANGED_SERVICES ?: 'none'}"
