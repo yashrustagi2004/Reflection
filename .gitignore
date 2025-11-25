@@ -185,3 +185,9 @@ mongodb.log
 # Temporary folders
 tmp/
 temp/
+
+
+#test modules
+/tests/
+pytest.ini 
+run_tests_local.sh
