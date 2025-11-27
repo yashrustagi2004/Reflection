@@ -7,6 +7,13 @@ import os
 import sys
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from dotenv import load_dotenv
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST, REGISTRY
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.serving import run_simple
+import time
+import psutil
+
+
 
 # Add parent directory to path for shared imports
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -98,6 +105,53 @@ def contact():
         return jsonify({'success': True, 'message': 'Message received'})
     return render_template('contact.html')
 
+
+# Monitoring
+# Custom metrics
+REQUEST_COUNT = Counter('http_request_total', 'Total HTTP Requests', ['method', 'status', 'path'])
+REQUEST_LATENCY = Histogram('http_request_duration_seconds', 'HTTP Request Duration', ['method', 'status', 'path'])
+REQUEST_IN_PROGRESS = Gauge('http_requests_in_progress', 'HTTP Requests in progress', ['method', 'path'])
+
+# System metrics
+CPU_USAGE = Gauge('process_cpu_usage', 'Current CPU usage in percent')
+MEMORY_USAGE = Gauge('process_memory_usage_bytes', 'Current memory usage in bytes')
+
+def update_system_metrics():
+    CPU_USAGE.set(psutil.cpu_percent())
+    MEMORY_USAGE.set(psutil.Process().memory_info().rss)
+
+@app.before_request
+def before_request():
+    request.start_time = time.time()
+    REQUEST_IN_PROGRESS.labels(method=request.method, path=request.path).inc()
+
+@app.after_request
+def after_request(response):
+    request_latency = time.time() - request.start_time
+    REQUEST_COUNT.labels(method=request.method, status=response.status_code, path=request.path).inc()
+    REQUEST_LATENCY.labels(method=request.method, status=response.status_code, path=request.path).observe(request_latency)
+    REQUEST_IN_PROGRESS.labels(method=request.method, path=request.path).dec()
+    return response
+
+
+@app.route('/metrics')
+def metrics():
+    update_system_metrics()
+    return generate_latest(REGISTRY), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+
+# Modify the middleware to return bytes
+def metrics_app(environ, start_response):
+    update_system_metrics()
+    data = generate_latest(REGISTRY)
+    status = '200 OK'
+    headers = [('Content-Type', CONTENT_TYPE_LATEST), ('Content-Length', str(len(data)))]
+    start_response(status, headers)
+    return [data]
+
+# Use the modified middleware
+app_dispatch = DispatcherMiddleware(app, {
+    '/metrics': metrics_app
+})
 
 # ==================== Authentication Routes ====================
 
@@ -1129,8 +1183,11 @@ def generate_questions():
 
 if __name__ == '__main__':
     port = int(os.getenv('FRONTEND_PORT', 5000))
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    )
+    
+    use_debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    try:
+        # run_simple(hostname, port, application, use_reloader=False, use_debugger=False, threaded=False)
+        run_simple('0.0.0.0', port, app_dispatch, use_reloader=use_debug, use_debugger=use_debug)
+    except Exception:
+        # Fallback to Flask's development server if run_simple isn't available or fails
+        app.run(host='0.0.0.0', port=port, debug=use_debug)

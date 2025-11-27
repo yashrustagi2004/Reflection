@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: speechtotext-servicemonitor
+  namespace: reflection
+  labels:
+    app: speechtotext
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: speechtotext
+  namespaceSelector:
+    matchNames:
+      - reflection
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      scheme: http
+      honorLabels: true
+      # Optional relabeling to reduce cardinality or drop sensitive labels
+      metricRelabelings: []

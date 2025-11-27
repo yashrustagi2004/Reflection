@@ -41,7 +41,7 @@ spec:
       
       containers:
       - name: login-management
-        image: reflection/login-management:latest
+        image: reflection/loginmanagement:latest
         imagePullPolicy: IfNotPresent
         
         ports:

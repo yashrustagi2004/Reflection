@@ -5,7 +5,7 @@ metadata:
   namespace: reflection
 data:
   # Database Configuration
-  DATABASE_NAME: "lightning"
+  DATABASE_NAME: "Reflection"
   MONGODB_HOST: "mongodb-service"
   MONGODB_PORT: "27017"
   MONGODB_AUTH_SOURCE: "admin"
@@ -18,8 +18,8 @@ data:
   FILE_PARSING_URL: "http://file-parsing-service:5002"
   QA_GENERATION_PORT: "5003"
   QA_GENERATION_URL: "http://qa-generation-service:5003"
-  ANSWER_ANALYSIS_PORT: "5004"
-  ANSWER_ANALYSIS_URL: "http://speechtotext-service:5004"
+  SPEECH_TO_TEXT_PORT: "5004"
+  SPEECH_TO_TEXT_URL: "http://speechtotext-service:5004"
   RESOURCES_PORT: "5005"
   RESOURCES_URL: "http://resources-service:5005"
   
