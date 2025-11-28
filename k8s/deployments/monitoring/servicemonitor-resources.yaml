@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: resources-servicemonitor
+  namespace: reflection
+  labels:
+    app: resources
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: resources
+  namespaceSelector:
+    matchNames:
+      - reflection
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      scheme: http
+      honorLabels: true
+      # Optional relabeling to reduce cardinality or drop sensitive labels
+      metricRelabelings: []

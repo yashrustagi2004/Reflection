@@ -3,8 +3,9 @@
 # Start All Port Forwards
 # ==========================================
 # This script creates port forwards for:
-# - Ingress controller (port 5000) - for frontend
+# - Frontend (port 5000)
 # - All microservices (direct access on their ports)
+# - Mongo Express (port 8081) - Database UI
 # Runs in background (detached mode)
 
 echo "🚀 Starting Port Forwards for all services..."
@@ -35,6 +36,9 @@ nohup kubectl port-forward -n reflection service/speechtotext-service 5004:5004 
 
 echo "📡 Starting Resources Service (port 5005)..."
 nohup kubectl port-forward -n reflection service/resources-service 5005:5005 > /tmp/resources-port-forward.log 2>&1 &
+
+echo "📡 Starting Mongo Express (port 8081)..."
+nohup kubectl port-forward -n reflection service/mongo-express-service 8081:8081 > /tmp/mongo-express-port-forward.log 2>&1 &
 
 # Wait for port-forwards to initialize
 echo ""
@@ -90,13 +94,20 @@ else
     FAILED=1
 fi
 
+if pgrep -f "port-forward.*mongo-express-service.*8081:8081" > /dev/null; then
+    echo "✅ Mongo Express:      http://localhost:8081 (admin/admin123)"
+else
+    echo "❌ Mongo Express:      FAILED"
+    FAILED=1
+fi
+
 echo "================================================"
 echo ""
 
 if [ $FAILED -eq 0 ]; then
     echo "🎉 All port forwards started successfully!"
     echo ""
-    echo "📝 Test with:"
+    echo " Test with:"
     echo "   curl http://localhost:5001/health  # Login Management"
     echo "   curl http://localhost:5002/health  # File Parsing"
     echo "   curl http://localhost:5003/health  # QA Generation"
@@ -104,10 +115,13 @@ if [ $FAILED -eq 0 ]; then
     echo "   curl http://localhost:5005/health  # Resources"
     echo "   curl http://localhost:5000/health  # Frontend"
     echo ""
-    echo "📂 Logs in /tmp/*-port-forward.log"
-    echo "🛑 To stop all: pkill -f 'port-forward'"
+    echo "🗄️  Mongo Express:  http://localhost:8081"
+    echo "   Username: admin  Password: admin123"
+    echo ""
+    echo "Logs in /tmp/*-port-forward.log"
+    echo "To stop all: pkill -f 'port-forward'"
 else
-    echo "⚠️  Some port forwards failed to start"
+    echo "Some port forwards failed to start"
     echo "Check logs in /tmp/*-port-forward.log"
     exit 1
 fi

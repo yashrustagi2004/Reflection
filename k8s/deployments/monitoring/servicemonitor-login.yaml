@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: login-management-servicemonitor
+  namespace: reflection
+  labels:
+    app: login-management
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: login-management
+  namespaceSelector:
+    matchNames:
+      - reflection
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      scheme: http
+      honorLabels: true
+      # Optional relabeling to reduce cardinality or drop sensitive labels
+      metricRelabelings: []
